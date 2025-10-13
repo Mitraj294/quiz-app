@@ -7,31 +7,28 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      */
-    public function create()
+    public function create(): View
     {
-        return Inertia::render('Auth/Login');
+        return view('auth.login');
     }
 
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request)
+    public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        // On successful login, redirect to the intended page (Inertia will handle it client-side)
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

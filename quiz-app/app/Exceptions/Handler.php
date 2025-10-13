@@ -45,30 +45,7 @@ class Handler extends ExceptionHandler
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        // If this is an Inertia request, render the login page directly so the client
-        // receives a proper Inertia response and displays the UI instead of a plain JSON message.
-        if ($request->header('X-Inertia')) {
-            // Match props returned by the AuthenticatedSessionController::create
-            $props = [
-                'canResetPassword' => \Illuminate\Support\Facades\Route::has('password.request'),
-                'status' => session('status'),
-            ];
-
-            // Return an Inertia response for the login page. Some middleware may set an
-            // X-Inertia-Location header which causes a 409; remove it and force 200 so
-            // the client receives a valid Inertia JSON payload to render the UI.
-            $response = Inertia::render('Auth/Login', $props)->toResponse($request);
-
-            if ($response->headers->has('X-Inertia-Location')) {
-                $response->headers->remove('X-Inertia-Location');
-            }
-
-            $response->setStatusCode(200);
-
-            return $response;
-        }
-
-        // If the client expects JSON (but not Inertia), return the standard JSON response.
+        // If the client expects JSON, return the standard JSON response.
         if ($request->expectsJson()) {
             return response()->json(['message' => 'Please log in.'], 401);
         }

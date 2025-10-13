@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Topic extends Model
 {
-    protected $fillable = ['name', 'slug', 'parent_id', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'parent_id', 'is_active'];
 
     public function questions(): MorphToMany
     {
