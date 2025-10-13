@@ -5,13 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Option extends Model
+class QuizQuestion extends Model
 {
     protected $fillable = [
+        'quiz_id',
         'question_id',
-        'option_text',
-        'is_correct',
+        'marks',
+        'negative_marks',
+        'order',
+        'is_optional',
     ];
+
+    public function quiz(): BelongsTo
+    {
+        return $this->belongsTo(Quiz::class);
+    }
 
     public function question(): BelongsTo
     {
