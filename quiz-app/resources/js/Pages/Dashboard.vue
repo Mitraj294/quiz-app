@@ -6,6 +6,7 @@ import { computed } from 'vue';
 const page = usePage();
 const user = computed(() => page.props.value?.auth?.user ?? null);
 const roles = computed(() => (user.value && Array.isArray(user.value.roles)) ? user.value.roles : []);
+const displayName = computed(() => user.value?.name ?? 'Guest');
 </script>
 
 <template>
@@ -22,13 +23,8 @@ const roles = computed(() => (user.value && Array.isArray(user.value.roles)) ? u
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <template v-if="user">
-                            <h3 class="text-lg font-medium">Welcome, {{ user.name }}!</h3>
-                            <p class="mt-2">Your roles: <span class="font-semibold">{{ roles.join(', ') || 'none' }}</span></p>
-                        </template>
-                        <template v-else>
-                            <p>You're logged in!</p>
-                        </template>
+                        <h3 class="text-lg font-medium">Welcome, {{ displayName }}!</h3>
+                        <p class="mt-2">Your roles: <span class="font-semibold">{{ (roles.length ? roles.join(', ') : 'none') }}</span></p>
                     </div>
                 </div>
             </div>
