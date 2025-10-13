@@ -69,6 +69,22 @@ const form = useForm({
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
+            <!-- Role (read-only) -->
+            <div>
+                <InputLabel for="role" value="Role" />
+
+                <input
+                    id="role"
+                    type="text"
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm"
+                    :value="(user && user.roles) ? (Array.isArray(user.roles) ? user.roles.join(', ') : user.roles) : 'user'"
+                    disabled
+                    readonly
+                />
+
+                <p class="mt-2 text-sm text-gray-500">Your role is read-only. Contact an admin to change roles.</p>
+            </div>
+
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
                 <p class="mt-2 text-sm text-gray-800">
                     Your email address is unverified.

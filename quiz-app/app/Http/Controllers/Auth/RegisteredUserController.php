@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -45,6 +46,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+    // Attach default 'user' role to newly registered users (create role if missing)
+    $role = Role::firstOrCreate(['role' => 'user']);
+    $user->roles()->syncWithoutDetaching([$role->id]);
 
         return redirect(route('dashboard', absolute: false));
     }
