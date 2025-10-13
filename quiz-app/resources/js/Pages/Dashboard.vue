@@ -4,8 +4,8 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
-const user = computed(() => page.props.value.auth?.user || null);
-const roles = computed(() => (user.value && user.value.roles) ? user.value.roles : []);
+const user = computed(() => page.props.value?.auth?.user ?? null);
+const roles = computed(() => (user.value && Array.isArray(user.value.roles)) ? user.value.roles : []);
 </script>
 
 <template>

@@ -30,6 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::get(PROFILE_ROUTE, [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch(PROFILE_ROUTE, [ProfileController::class, 'update'])->name('profile.update');
     Route::delete(PROFILE_ROUTE, [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Topic management (simple CRUD: list, create, show)
+    Route::get('/topics', [\App\Http\Controllers\TopicController::class, 'index'])->name('topics.index');
+    Route::post('/topics', [\App\Http\Controllers\TopicController::class, 'store'])->name('topics.store');
+    Route::get('/topics/{topic}', [\App\Http\Controllers\TopicController::class, 'show'])->name('topics.show');
 });
 
 require __DIR__.'/auth.php';
