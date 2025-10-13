@@ -18,12 +18,13 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: '127.0.0.1',
-        port: 3000,
+        // Vite will only be used to build/watch assets. Laravel will serve the app on port 8000.
+        host: true,
+        port: 8000,
         proxy: {
-            // Proxy everything except Vite's own asset endpoints to the Laravel dev server
+            // Proxy application requests to the Laravel dev server on port 8000
             '^/(?!(@vite|@id|@fs|node_modules|resources)/)': {
-                target: 'http://127.0.0.1:5000',
+                target: 'http://127.0.0.1:8000',
                 changeOrigin: true,
                 secure: false,
             },

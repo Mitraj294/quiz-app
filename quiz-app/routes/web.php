@@ -2,21 +2,10 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function (Request $request) {
-    $frontend = env('FRONTEND_URL', 'http://127.0.0.1:3000');
-
-    $isInertia = $request->header('X-Inertia') !== null;
-    $isXhr = $request->ajax();
-    $wantsJson = str_contains($request->header('Accept', ''), 'application/json');
-
-    if (! $isInertia && ! $isXhr && ! $wantsJson) {
-        return redirect()->away($frontend);
-    }
-
+Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),

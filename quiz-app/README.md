@@ -76,13 +76,13 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 	php artisan migrate --force
 	php artisan db:seed --force
 	```
-5. Start the Laravel backend on `http://127.0.0.1:5000`:
+5. Start the Laravel backend on `http://127.0.0.1:8000` (everything will be served by Laravel on port 8000):
 	```bash
-	php artisan serve --host=127.0.0.1 --port=5000
+	php artisan serve --host=127.0.0.1 --port=8000
 	```
-6. In a separate terminal, start the Vite dev server on `http://127.0.0.1:3000`:
+6. In a separate terminal, build assets in watch mode (Vite will only compile assets and proxy requests to Laravel; you don't need to visit Vite directly):
 	```bash
-	npm run dev
+	npm run watch
 	```
 
-The Vite server proxies API requests to the Laravel backend, so visiting `http://127.0.0.1:3000` will load the Vue frontend while using the Laravel API on port 5000.
+Now visit `http://127.0.0.1:8000` to use the application — the Laravel server will serve the HTML and built assets. During development, the watch task will keep assets up-to-date.

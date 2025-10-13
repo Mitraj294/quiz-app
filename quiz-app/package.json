@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite --port 3000 --host 127.0.0.1"
+        "dev": "vite build --watch",
+        "watch": "vite build --watch"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
