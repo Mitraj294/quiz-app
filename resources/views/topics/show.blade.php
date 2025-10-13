@@ -42,19 +42,20 @@
                     @endif
 
                     <!-- Action Buttons -->
-                    @if(Auth::user()->isAdmin())
-                        <div class="flex gap-4 mb-6">
-                            <button type="button" 
-                                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    onclick="document.getElementById('create-subtopic-form').classList.toggle('hidden')">
-                                + Create Sub-Topic
-                            </button>
-                            <button type="button" 
-                                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                                    onclick="document.getElementById('create-quiz-form').classList.toggle('hidden')">
-                                + Create Quiz
-                            </button>
-                        </div>
+                    @auth
+                        @if(Auth::user()->isAdmin())
+                            <div class="flex gap-4 mb-6 border-2 border-red-500 p-4">
+                                <button type="button" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        onclick="document.getElementById('create-subtopic-form').classList.toggle('hidden')">
+                                    + Create Sub-Topic
+                                </button>
+                                <button type="button" 
+                                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                                        onclick="document.getElementById('create-quiz-form').classList.toggle('hidden')">
+                                    + Create Quiz
+                                </button>
+                            </div>
 
                         <!-- Create Sub-Topic Form -->
                         <div id="create-subtopic-form" class="hidden mb-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
@@ -88,30 +89,34 @@
 
                         <!-- Create Quiz Form -->
                         <div id="create-quiz-form" class="hidden mb-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
-                            <h4 class="text-lg font-medium mb-4">Create Quiz</h4>
+                            <h4 class="text-lg font-medium mb-4">Create Quiz for {{ $topic->name }}</h4>
                             <form method="POST" action="{{ route('quizzes.store') }}">
                                 @csrf
+                                <!-- Pre-select this topic -->
+                                <input type="hidden" name="topic_option" value="existing">
                                 <input type="hidden" name="topic_id" value="{{ $topic->id }}">
                                 
                                 <div class="mb-4">
                                     <label for="quiz_name" class="block text-sm font-medium mb-2">Quiz Name <span class="text-red-500">*</span></label>
                                     <input type="text" id="quiz_name" name="name" required 
-                                           class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                           class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                           placeholder="e.g., {{ $topic->name }} - Basic Quiz">
                                 </div>
                                 <div class="mb-4">
                                     <label for="quiz_description" class="block text-sm font-medium mb-2">Description (Optional)</label>
                                     <textarea id="quiz_description" name="description" rows="3" 
-                                              class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                              class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                              placeholder="Describe what this quiz covers..."></textarea>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                     <div>
                                         <label for="total_marks" class="block text-sm font-medium mb-2">Total Marks</label>
-                                        <input type="number" id="total_marks" name="total_marks" step="0.01" 
+                                        <input type="number" id="total_marks" name="total_marks" step="0.01" value="100"
                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                     <div>
                                         <label for="pass_marks" class="block text-sm font-medium mb-2">Pass Marks</label>
-                                        <input type="number" id="pass_marks" name="pass_marks" step="0.01" 
+                                        <input type="number" id="pass_marks" name="pass_marks" step="0.01" value="40"
                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                 </div>
@@ -175,7 +180,8 @@
                             </div>
                         @else
                             <p class="text-gray-500">No quizzes available for this topic yet.</p>
-                        @endif
+                        @elseif
+                        <p class="text-gray-500 mt-4">Explore more topics to find quizzes that interest you!</p>
                     </div>
                 </div>
             </div>

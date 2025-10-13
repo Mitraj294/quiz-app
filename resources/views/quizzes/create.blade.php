@@ -126,22 +126,14 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="is_published" value="1" 
-                                               {{ old('is_published') ? 'checked' : '' }}
-                                               class="rounded border-gray-300 text-indigo-600">
-                                        <span class="ml-2 text-sm font-medium">Publish quiz immediately</span>
-                                    </label>
-                                    <p class="text-xs text-gray-500 ml-6 mt-1">If unchecked, quiz will be saved as draft</p>
-                                </div>
+                             
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
                         <div class="flex items-center gap-4 pt-4">
                             <button type="submit" 
-                                    class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition">
+                                   class="px-6 py-3 text-gray-700 hover:text-gray-900 transition">
                                 Create Quiz
                             </button>
                             <a href="{{ route('topics.index') }}" 

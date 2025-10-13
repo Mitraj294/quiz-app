@@ -20,17 +20,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/topics', [\App\Http\Controllers\TopicController::class, 'index'])->name('topics.index');
     Route::post('/topics', [\App\Http\Controllers\TopicController::class, 'store'])->name('topics.store');
     Route::get('/topics/{topic}', [\App\Http\Controllers\TopicController::class, 'show'])->name('topics.show');
+    Route::get('/topics/{topic}/quizzes/create', [\App\Http\Controllers\QuizController::class, 'create'])->name('quizzes.create');
     
-    // Quiz routes
+    // Quiz routes - list all quizzes
     Route::get('/quizzes', [\App\Http\Controllers\QuizController::class, 'index'])->name('quizzes.index');
-    Route::get('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'show'])->name('quizzes.show');
 });
 
-// Admin-only quiz management routes (must come after auth middleware group)
+// Admin-only quiz management routes (specific routes MUST come before dynamic {quiz} route)
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/quizzes/create', [\App\Http\Controllers\QuizController::class, 'create'])->name('quizzes.create');
     Route::post('/quizzes', [\App\Http\Controllers\QuizController::class, 'store'])->name('quizzes.store');
     Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'destroy'])->name('quizzes.destroy');
+});
+
+// Quiz show route - MUST come after /quizzes/create to avoid route conflict
+Route::middleware('auth')->group(function () {
+    Route::get('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'show'])->name('quizzes.show');
 });
 
 require __DIR__.'/auth.php';
