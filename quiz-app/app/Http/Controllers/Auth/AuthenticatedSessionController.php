@@ -18,7 +18,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
-        return response()->json(['message' => 'Please log in.']);
+        return Inertia::render('Auth/Login');
     }
 
     /**
@@ -30,7 +30,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return response()->json(['message' => 'Logged in successfully.']);
+        // On successful login, redirect to the intended page (Inertia will handle it client-side)
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
