@@ -17,4 +17,15 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        port: 5000,
+        proxy: {
+            // Proxy all API/ backend requests to Laravel dev server running on 5050
+            '/': {
+                target: 'http://localhost:5050',
+                changeOrigin: true,
+                secure: false,
+            },
+        },
+    },
 });

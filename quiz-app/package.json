@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+    "build": "vite build",
+    "dev": "vite --port 5000"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
