@@ -18,11 +18,12 @@ export default defineConfig({
         }),
     ],
     server: {
-        port: 5000,
+        host: '127.0.0.1',
+        port: 3000,
         proxy: {
-            // Proxy all API/ backend requests to Laravel dev server running on 5050
-            '/': {
-                target: 'http://localhost:5050',
+            // Proxy everything except Vite's own asset endpoints to the Laravel dev server
+            '^/(?!(@vite|@id|@fs|node_modules|resources)/)': {
+                target: 'http://127.0.0.1:5000',
                 changeOrigin: true,
                 secure: false,
             },

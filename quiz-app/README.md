@@ -59,3 +59,30 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Local development setup
+
+1. Install PHP dependencies:
+	```bash
+	composer install
+	```
+2. Install Node dependencies:
+	```bash
+	npm install
+	```
+3. Configure your `.env` for MySQL (already set to `quiz_app` with the `quizapp/quizapp` user).
+4. Run migrations and seed data (optional if already done):
+	```bash
+	php artisan migrate --force
+	php artisan db:seed --force
+	```
+5. Start the Laravel backend on `http://127.0.0.1:5000`:
+	```bash
+	php artisan serve --host=127.0.0.1 --port=5000
+	```
+6. In a separate terminal, start the Vite dev server on `http://127.0.0.1:3000`:
+	```bash
+	npm run dev
+	```
+
+The Vite server proxies API requests to the Laravel backend, so visiting `http://127.0.0.1:3000` will load the Vue frontend while using the Laravel API on port 5000.

@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-    "build": "vite build",
-    "dev": "vite --port 5000"
+        "build": "vite build",
+        "dev": "vite --port 3000 --host 127.0.0.1"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
@@ -19,5 +19,8 @@
         "tailwindcss": "^3.2.1",
         "vite": "^7.0.7",
         "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "ziggy-js": "^2.6.0"
     }
 }
