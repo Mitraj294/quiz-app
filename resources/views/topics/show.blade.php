@@ -37,23 +37,29 @@
                     
                     @if($topic->description)
                         <div class="mb-6">
-                            <p class="text-gray-700">{{ $topic->description }}</p>
+                            <p class="text-gray-800">{{ $topic->description }}</p>
                         </div>
                     @endif
 
-                    <!-- Action Buttons -->
+                    <!-- Admin Action Buttons -->
                     @auth
                         @if(Auth::user()->isAdmin())
-                            <div class="flex gap-4 mb-6 border-2 border-red-500 p-4">
+                            <div class="flex gap-4 mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                 <button type="button" 
-                                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-black rounded-lg hover:bg-blue-700 transition shadow-sm"
                                         onclick="document.getElementById('create-subtopic-form').classList.toggle('hidden')">
-                                    + Create Sub-Topic
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Create Sub-Topic
                                 </button>
                                 <button type="button" 
-                                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                                        class="flex items-center gap-2 px-4 py-2 bg-green-600 text-black rounded-lg hover:bg-green-700 transition shadow-sm"
                                         onclick="document.getElementById('create-quiz-form').classList.toggle('hidden')">
-                                    + Create Quiz
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Create Quiz
                                 </button>
                             </div>
 
@@ -75,11 +81,11 @@
                                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700">
                                         Create Sub-Topic
                                     </button>
                                     <button type="button" 
-                                            class="text-sm text-gray-600 hover:text-gray-900"
+                                            class="text-sm text-gray-700 hover:text-gray-900"
                                             onclick="document.getElementById('create-subtopic-form').classList.add('hidden')">
                                         Cancel
                                     </button>
@@ -127,7 +133,7 @@
                                     </label>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                    <button type="submit" class="px-4 py-2 bg-green-600 text-black rounded hover:bg-green-700">
                                         Create Quiz
                                     </button>
                                     <button type="button" 
@@ -155,7 +161,7 @@
                                        class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                         <h5 class="font-semibold mb-2">{{ $subTopic->name }}</h5>
                                         @if($subTopic->description)
-                                            <p class="text-sm text-gray-600">{{ $subTopic->description }}</p>
+                                            <p class="text-sm text-gray-700">{{ $subTopic->description }}</p>
                                         @endif
                                     </a>
                                 @endforeach
@@ -171,7 +177,7 @@
                                     <div class="border border-gray-300 rounded-lg p-4">
                                         <h5 class="font-semibold mb-2">{{ $quiz->title }}</h5>
                                         @if($quiz->description)
-                                            <p class="text-sm text-gray-600 mb-2">{{ $quiz->description }}</p>
+                                            <p class="text-sm text-gray-700 mb-2">{{ $quiz->description }}</p>
                                         @endif
                                         <a href="#" class="text-sm text-indigo-600 hover:text-indigo-900">
                                             Take Quiz →
@@ -180,7 +186,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-gray-500">No quizzes available for this topic yet.</p>
+                            <p class="text-gray-600">No quizzes available for this topic yet.</p>
                         @endif
                     </div>
                 </div>
