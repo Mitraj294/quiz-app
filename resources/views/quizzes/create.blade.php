@@ -33,7 +33,7 @@
                         @csrf
 
                         <!-- Step 1: Select or Create Topic -->
-                        <div class="mb-8">
+                        <div id="step-1" class="mb-8">
                             <h4 class="text-lg font-semibold mb-4">Step 1: Choose a Topic</h4>
                             
                             <!-- Topic Selection Options -->
@@ -79,12 +79,22 @@
                                     </div>
                                 </label>
                             </div>
+
+                            <!-- Step 1 actions -->
+                            <div class="flex items-center gap-4">
+                                <a href="{{ route('topics.index') }}" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</a>
+                                <button type="button" id="btn-next" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                         onclick="nextStep()">Next</button>
+                            </div>
                         </div>
 
                         <hr class="my-8">
 
-                        <!-- Step 2: Quiz Details -->
-                        <div class="mb-8">
+                        <!-- Step 2: Quiz Details (hidden until Next) -->
+                        <div id="step-2" class="mb-8 hidden">
+                            <div class="mb-4 mt-4" id="step2-top-note">
+                                <p class="text-lg text-gray-1000">Let's Create Quiz For "<span id="chosen-topic" class="font-semibold text-lg"></span>"</p>
+                            </div>
                             <h4 class="text-lg font-semibold mb-4">Step 2: Quiz Details</h4>
                             
                             <div class="space-y-4">
@@ -178,21 +188,17 @@
                                     </div>
                                 </div>
 
-                             
+                            
                             </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center gap-4 pt-4">
-                            <button type="submit" 
-                                   class="px-6 py-3 text-gray-700 hover:text-gray-900 transition">
-                                Create Quiz
-                            </button>
-                            <a href="{{ route('topics.index') }}" 
-                               class="px-6 py-3 text-gray-700 hover:text-gray-900 transition">
-                                Cancel
-                            </a>
-                        </div>
+                            <!-- Step 2 actions -->
+                            <div class="flex items-center gap-4 pt-4">
+                                <button type="button" id="btn-back" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50" onclick="goToStep(1)">Back</button>
+                                <button type="submit" 
+                                  class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                        > Create Quiz
+                                </button>
+                          
+                            </div>
                     </form>
                 </div>
             </div>
@@ -223,5 +229,50 @@
         document.addEventListener('DOMContentLoaded', function() {
             toggleTopicInputs('existing');
         });
+
+        // Step navigation and validation
+        function nextStep() {
+            const selectedOption = document.querySelector('input[name="topic_option"]:checked').value;
+            const topicSelect = document.getElementById('topic_id');
+            const newTopicName = document.getElementById('new_topic_name');
+
+            let valid = true;
+            let chosenText = '';
+
+            if (selectedOption === 'existing') {
+                if (!topicSelect || !topicSelect.value) {
+                    valid = false;
+                    alert('Please choose an existing topic or select Create New Topic.');
+                } else {
+                    chosenText = topicSelect.options[topicSelect.selectedIndex].text;
+                }
+            } else {
+                if (!newTopicName || !newTopicName.value.trim()) {
+                    valid = false;
+                    alert('Please enter a name for the new topic.');
+                } else {
+                    chosenText = newTopicName.value.trim();
+                }
+            }
+
+            if (!valid) return;
+
+            // populate chosen topic label
+            const chosenLabel = document.getElementById('chosen-topic');
+            if (chosenLabel) chosenLabel.textContent = chosenText;
+
+            // show step 2
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            // ensure correct required attributes
+            toggleTopicInputs(selectedOption);
+        }
+
+        function goToStep(step) {
+            if (step === 1) {
+                document.getElementById('step-2').classList.add('hidden');
+                document.getElementById('step-1').classList.remove('hidden');
+            }
+        }
     </script>
 </x-app-layout>

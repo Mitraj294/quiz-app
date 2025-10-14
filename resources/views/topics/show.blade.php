@@ -77,7 +77,7 @@
                                     </svg>
                                     Create Quiz
                                 </button>
-                                <a href="{{ route('topics.questions.create', $topic) }}" 
+                                <a href="{{ route('topics.questions.create', $topic->id) }}" 
                                     class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                         >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,12 +190,26 @@
                         @if(isset($topic->quizzes) && $topic->quizzes->count() > 0)
                             <div class="space-y-4">
                                 @foreach($topic->quizzes as $quiz)
-                                    <div class="border border-gray-300 rounded-lg p-4">
-                                        <h5 class="font-semibold mb-2">{{ $quiz->title }}</h5>
-                                        @if($quiz->description)
-                                            <p class="text-sm text-gray-700 mb-2">{{ $quiz->description }}</p>
-                                        @endif
-                                        <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900">
+                                    <div class="border border-gray-300 rounded-lg p-4 hover:shadow-md transition">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h5 class="font-semibold mb-2">{{ $quiz->name }}</h5>
+                                                @if($quiz->description)
+                                                    <p class="text-sm text-gray-700 mb-2">{{ $quiz->description }}</p>
+                                                @endif
+                                                <div class="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                                                    <span> Total: {{ $quiz->total_marks }} marks</span>
+                                                    <span>Pass: {{ $quiz->pass_marks }} marks</span>
+                                                    @if($quiz->duration > 0)
+                                                        <span> {{ $quiz->duration }} sec</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if(!$quiz->is_published)
+                                                <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Draft</span>
+                                            @endif
+                                        </div>
+                                        <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">
                                             Take Quiz →
                                         </a>
                                     </div>

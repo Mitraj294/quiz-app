@@ -22,16 +22,18 @@ return new class extends Migration
            
             $sm = Schema::getConnection()->getSchemaBuilder();
             $indexesFound = $sm->getIndexes($this->tableNames['topics']);
-            if (array_key_exists($this->tableNames['topics'] . "_slug_unique", $indexesFound))
+            if (array_key_exists($this->tableNames['topics'] . "_slug_unique", $indexesFound)) {
                 $table->dropUnique($this->tableNames['topics'] . "_slug_unique");
+            }
         });
 
         Schema::table($this->tableNames['quizzes'], function (Blueprint $table) {
 
             $sm = Schema::getConnection()->getSchemaBuilder();
             $indexesFound = $sm->getIndexes($this->tableNames['quizzes']);
-            if (array_key_exists($this->tableNames['quizzes'] . "_slug_unique", $indexesFound))
+            if (array_key_exists($this->tableNames['quizzes'] . "_slug_unique", $indexesFound)) {
                 $table->dropUnique($this->tableNames['quizzes'] . "_slug_unique");
+            }
         });
     }
 

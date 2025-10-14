@@ -62,30 +62,43 @@ class QuestionController extends Controller
 
             // If MCQ types, store options and mark correct ones
             if (in_array($data['question_type'], [1,2])) {
-                $correct = $data['correct'] ?? [];
-                if (! empty($data['options'])) {
-                    foreach ($data['options'] as $idx => $opt) {
-                        if (! empty($opt)) {
-                            VendorOption::create([
-                                'question_id' => $question->id,
-                                'name' => $opt,
-                                'is_correct' => in_array($idx, $correct),
-                            ]);
-                        }
-                    }
-                }
+                $this->storeMcqOptions($question->id, $data['options'] ?? [], $data['correct'] ?? []);
             }
 
             // If text/short answer, store the answer as a correct option (package has no explicit text-answer column)
             if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
-                VendorOption::create([
-                    'question_id' => $question->id,
-                    'name' => $data['text_answer'],
-                    'is_correct' => true,
-                ]);
+                $this->storeTextAnswerOption($question->id, $data['text_answer']);
             }
         });
 
     return redirect()->route('topics.show', $topic->id)->with('success', 'Question added successfully');
+    }
+
+    /**
+     * Store MCQ options for a given question id.
+     */
+    private function storeMcqOptions(int $questionId, array $options, array $correct): void
+    {
+        foreach ($options as $idx => $opt) {
+            if (! empty($opt)) {
+                VendorOption::create([
+                    'question_id' => $questionId,
+                    'name' => $opt,
+                    'is_correct' => in_array((int) $idx, array_map('intval', $correct)),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Store a text/short-answer option as the correct option for the question.
+     */
+    private function storeTextAnswerOption(int $questionId, string $text): void
+    {
+        VendorOption::create([
+            'question_id' => $questionId,
+            'name' => $text,
+            'is_correct' => true,
+        ]);
     }
 }

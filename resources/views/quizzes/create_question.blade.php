@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Add Question to {{ $topic->name }}</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Add Question to {{ $quiz->name }}</h2>
     </x-slot>
 
     <div class="py-12">
@@ -17,7 +17,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('topics.questions.store', $topic) }}">
+                <form method="POST" action="{{ route('quizzes.questions.store', $quiz->id) }}">
                     @csrf
 
                     <div class="mb-4">
@@ -50,9 +50,34 @@
                         <input type="text" name="text_answer" id="text_answer_input" class="w-full rounded-md border-gray-300">
                     </div>
 
+                    <div class="mb-4 grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="marks" class="block text-sm font-medium mb-2">Marks</label>
+                            <input type="number" name="marks" id="marks" step="0.01" value="1" class="w-full rounded-md border-gray-300">
+                        </div>
+                        <div>
+                            <label for="negative_marks" class="block text-sm font-medium mb-2">Negative Marks</label>
+                            <select name="negative_marks" id="negative_marks" class="w-full rounded-md border-gray-300">
+                                <option value="0">No negative marking</option>
+                                <option value="0.25">1/4 (0.25)</option>
+                                <option value="0.33">1/3 (0.33)</option>
+                                <option value="0.5">1/2 (0.5)</option>
+                                <option value="1">Full (1)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="is_optional" class="block text-sm font-medium mb-2">Is Optional</label>
+                            <select name="is_optional" id="is_optional" class="w-full rounded-md border-gray-300">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="flex gap-4">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">Add Question</button>
-                        <a href="{{ route('topics.show', $topic->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                       Create & Attach</button>
+                        <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -79,7 +104,6 @@
             const idx = list.children.length;
             const div = document.createElement('div');
             div.className = 'flex items-center gap-2';
-            // checkbox value is the option index
             div.innerHTML = `
                 <input type="checkbox" name="correct[]" value="${idx}" class="correct-checkbox">
                 <input type="text" name="options[]" class="w-full rounded-md border-gray-300" placeholder="Option ${idx+1}" value="${value}">
@@ -90,13 +114,11 @@
 
         function enforceCheckboxMode(tp) {
             const checkboxes = document.querySelectorAll('.correct-checkbox');
-            // remove existing listeners by cloning
             checkboxes.forEach(cb => {
                 const clone = cb.cloneNode(true);
                 cb.parentNode.replaceChild(clone, cb);
             });
             if (tp == '1') {
-                // single answer - make checkboxes act like radios
                 document.querySelectorAll('.correct-checkbox').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked) {
@@ -107,47 +129,12 @@
             }
         }
 
-        // Initialize with 4 option rows
         document.addEventListener('DOMContentLoaded', function() {
             const list = document.getElementById('options-list');
             if (list.children.length === 0) {
-                addOptionField();
-                addOptionField();
-                addOptionField();
-                addOptionField();
+                addOptionField(); addOptionField(); addOptionField(); addOptionField();
             }
             onTypeChange();
-
-            // client-side submit validation
-            document.querySelector('form').addEventListener('submit', function(e) {
-                const tp = document.getElementById('question_type').value;
-                if (tp == '1' || tp == '2') {
-                    const checkboxes = document.querySelectorAll('.correct-checkbox');
-                    let any = false;
-                    checkboxes.forEach(cb => { if (cb.checked) any = true; });
-                    if (!any) {
-                        e.preventDefault();
-                        alert('Please select at least one correct option for MCQ.');
-                        return false;
-                    }
-                    if (tp == '1') {
-                        // ensure only one selected
-                        let count = 0; document.querySelectorAll('.correct-checkbox').forEach(cb => { if (cb.checked) count++; });
-                        if (count > 1) {
-                            e.preventDefault();
-                            alert('Single-answer type allows only one correct option.');
-                            return false;
-                        }
-                    }
-                } else {
-                    const ans = document.getElementById('text_answer_input').value.trim();
-                    if (!ans) {
-                        e.preventDefault();
-                        alert('Please provide the answer for the text/short answer question.');
-                        return false;
-                    }
-                }
-            });
         });
     </script>
 </x-app-layout>

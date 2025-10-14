@@ -39,8 +39,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('quiz_questions', function (Blueprint $table) {
-            //
+        Schema::table('quiz_questions', function () {
+            // intentionally left blank - no reverse operation required
         });
     }
 };

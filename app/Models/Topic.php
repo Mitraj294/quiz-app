@@ -30,32 +30,6 @@ class Topic extends BaseTopic
     }
 
     /**
-     * Resolve route binding so both slug and numeric id work in URLs.
-     *
-     * Examples:
-     *  - /topics/my-topic-slug  (slug)
-     *  - /topics/9              (numeric id)
-     *
-     * @param  mixed  $value
-     * @param  string|null  $field
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function resolveRouteBinding($value, $field = null)
-    {
-        $field = $field ?? $this->getRouteKeyName();
-
-        // First try the configured route key (usually 'slug')
-        $model = static::where($field, $value)->first();
-
-        // If not found and value looks numeric, try by id as a fallback
-        if (! $model && is_numeric($value)) {
-            $model = static::find($value);
-        }
-
-        return $model;
-    }
-
-    /**
      * Use numeric id for route model binding by default in the app.
      * This overrides the package which uses 'slug'.
      */
@@ -63,4 +37,5 @@ class Topic extends BaseTopic
     {
         return 'id';
     }
+
 }

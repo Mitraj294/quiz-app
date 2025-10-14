@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Topic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TopicController extends Controller
@@ -45,8 +47,34 @@ class TopicController extends Controller
 
     public function show(Topic $topic)
     {
+        // Load questions
+        $topic->load('questions');
+
+        // Manually fetch quizzes due to polymorphic namespace mismatch
+        $quizIds = DB::table('topicables')
+            ->where('topic_id', $topic->id)
+            ->whereIn('topicable_type', ['App\Models\Quiz', 'Harishdurga\LaravelQuiz\Models\Quiz'])
+            ->pluck('topicable_id');
+
+        // Load quizzes based on user role
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
+        if ($user && $user->isAdmin()) {
+            // Admins see all quizzes (including drafts)
+            $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)->get();
+        } else {
+            // Regular users see only published quizzes
+            $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
+                ->where('is_published', 1)
+                ->get();
+        }
+
+        // Attach quizzes collection to topic for view compatibility
+        $topic->setRelation('quizzes', $quizzes);
+
         return view('topics.show', [
-            'topic' => $topic->load('questions','quizzes'),
+            'topic' => $topic,
         ]);
     }
 }
