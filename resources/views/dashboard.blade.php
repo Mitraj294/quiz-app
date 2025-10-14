@@ -68,9 +68,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                             </div>
-                            <h3 class="text-lg font-semibold mb-2">Create Quiz</h3>
+                            <h3 class="text-lg font-semibold mb-2">Manage Quiz</h3>
                             <p class="text-sm text-gray-600 mb-4">Add new quizzes to the platform</p>
-                            <a href="{{ route('quizzes.create') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Create →</a>
+                            <a href="{{ route('quizzes.index') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Create →</a>
                         </div>
                     </div>
 

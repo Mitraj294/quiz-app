@@ -12,6 +12,24 @@ class Topic extends BaseTopic
     // Keep this class intentionally small — it inherits behavior from the package model.
 
     /**
+     * Auto-generate a unique slug from the name if missing.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($topic) {
+            if (empty($topic->slug) && ! empty($topic->name)) {
+                $base = \Illuminate\Support\Str::slug($topic->name);
+                $slug = $base;
+                $i = 1;
+                while (static::where('slug', $slug)->exists()) {
+                    $slug = $base . '-' . $i++;
+                }
+                $topic->slug = $slug;
+            }
+        });
+    }
+
+    /**
      * Resolve route binding so both slug and numeric id work in URLs.
      *
      * Examples:

@@ -29,6 +29,9 @@ class QuestionController extends Controller
             'question_text' => 'required|string',
             'options' => 'array',
             'options.*' => 'nullable|string',
+            'correct' => 'array',
+            'correct.*' => 'nullable|integer',
+            'text_answer' => 'nullable|string',
         ]);
 
         // Map numeric type to human-friendly name and ensure the question_type exists
@@ -57,17 +60,29 @@ class QuestionController extends Controller
             // Attach to topic via topicable morph
             $topic->questions()->attach($question->id);
 
-            // If MCQ types, store options
-            if (in_array($data['question_type'], [1,2]) && ! empty($data['options'])) {
-                foreach ($data['options'] as $opt) {
-                    if (! empty($opt)) {
-                        VendorOption::create([
-                            'question_id' => $question->id,
-                            'name' => $opt,
-                            'is_correct' => false,
-                        ]);
+            // If MCQ types, store options and mark correct ones
+            if (in_array($data['question_type'], [1,2])) {
+                $correct = $data['correct'] ?? [];
+                if (! empty($data['options'])) {
+                    foreach ($data['options'] as $idx => $opt) {
+                        if (! empty($opt)) {
+                            VendorOption::create([
+                                'question_id' => $question->id,
+                                'name' => $opt,
+                                'is_correct' => in_array($idx, $correct),
+                            ]);
+                        }
                     }
                 }
+            }
+
+            // If text/short answer, store the answer as a correct option (package has no explicit text-answer column)
+            if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
+                VendorOption::create([
+                    'question_id' => $question->id,
+                    'name' => $data['text_answer'],
+                    'is_correct' => true,
+                ]);
             }
         });
 

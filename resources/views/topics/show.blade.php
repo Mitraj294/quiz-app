@@ -168,15 +168,11 @@
                     @endauth
 
                     <!-- Sub-Topics Section -->
-                    @php
-                        $subTopics = \App\Models\Topic::where('parent_id', $topic->id)->get();
-                    @endphp
-                    
-                    @if($subTopics->count() > 0)
+                    @if($topic->children && $topic->children->count() > 0)
                         <div class="mt-8 mb-8">
                             <h4 class="text-lg font-semibold mb-4">Sub-Topics</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($subTopics as $subTopic)
+                                @foreach($topic->children as $subTopic)
                                     <a href="{{ route('topics.show', $subTopic) }}" 
                                        class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                         <h5 class="font-semibold mb-2">{{ $subTopic->name }}</h5>
@@ -199,7 +195,7 @@
                                         @if($quiz->description)
                                             <p class="text-sm text-gray-700 mb-2">{{ $quiz->description }}</p>
                                         @endif
-                                        <a href="#" class="text-sm text-indigo-600 hover:text-indigo-900">
+                                        <a href="{{ route('quizzes.show', $quiz) }}" class="text-sm text-indigo-600 hover:text-indigo-900">
                                             Take Quiz →
                                         </a>
                                     </div>

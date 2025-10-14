@@ -10,7 +10,8 @@ class TopicController extends Controller
 {
     public function index()
     {
-        $topics = Topic::orderBy('name')->get();
+        // Only top-level topics (exclude sub-topics)
+        $topics = Topic::whereNull('parent_id')->orderBy('name')->get();
         return view('topics.index', [
             'topics' => $topics,
         ]);
