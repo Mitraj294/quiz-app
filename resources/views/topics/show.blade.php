@@ -139,6 +139,7 @@
                             </form>
                         </div>
                     @endif
+                    @endauth
 
                     <!-- Sub-Topics Section -->
                     @php
@@ -180,8 +181,7 @@
                             </div>
                         @else
                             <p class="text-gray-500">No quizzes available for this topic yet.</p>
-                        @elseif
-                        <p class="text-gray-500 mt-4">Explore more topics to find quizzes that interest you!</p>
+                        @endif
                     </div>
                 </div>
             </div>
