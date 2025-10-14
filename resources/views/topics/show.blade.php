@@ -173,7 +173,7 @@
                             <h4 class="text-lg font-semibold mb-4">Sub-Topics</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 @foreach($topic->children as $subTopic)
-                                    <a href="{{ route('topics.show', $subTopic) }}" 
+                                    <a href="{{ route('topics.show', $subTopic->id) }}" 
                                        class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                         <h5 class="font-semibold mb-2">{{ $subTopic->name }}</h5>
                                         @if($subTopic->description)
@@ -195,7 +195,7 @@
                                         @if($quiz->description)
                                             <p class="text-sm text-gray-700 mb-2">{{ $quiz->description }}</p>
                                         @endif
-                                        <a href="{{ route('quizzes.show', $quiz) }}" class="text-sm text-indigo-600 hover:text-indigo-900">
+                                        <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900">
                                             Take Quiz →
                                         </a>
                                     </div>

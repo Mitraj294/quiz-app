@@ -17,8 +17,8 @@
                     </x-nav-link>
 
                     @if(Auth::check() && Auth::user()->isAdmin())
-                        <x-nav-link :href="url('/quizzes/create')" :active="request()->is('quizzes/create')">
-                            {{ __('Create Quiz') }}
+                        <x-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                            {{ __('Manage Quiz') }}
                         </x-nav-link>
                         <x-nav-link :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Manage Topics') }}

@@ -86,6 +86,6 @@ class QuestionController extends Controller
             }
         });
 
-        return redirect()->route('topics.show', $topic)->with('success', 'Question added successfully');
+    return redirect()->route('topics.show', $topic->id)->with('success', 'Question added successfully');
     }
 }

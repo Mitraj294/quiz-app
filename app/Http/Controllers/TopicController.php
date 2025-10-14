@@ -35,7 +35,7 @@ class TopicController extends Controller
         if ($parentId) {
             $parent = Topic::find($parentId);
             if ($parent) {
-                return redirect()->route('topics.show', $parent)
+                return redirect()->route('topics.show', $parent->id)
                     ->with('success', 'Sub-topic created successfully!');
             }
         }

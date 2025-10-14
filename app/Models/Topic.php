@@ -54,4 +54,13 @@ class Topic extends BaseTopic
 
         return $model;
     }
+
+    /**
+     * Use numeric id for route model binding by default in the app.
+     * This overrides the package which uses 'slug'.
+     */
+    public function getRouteKeyName()
+    {
+        return 'id';
+    }
 }

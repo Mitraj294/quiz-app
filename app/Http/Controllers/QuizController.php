@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Harishdurga\LaravelQuiz\Models\Quiz;
+use App\Models\Quiz;
 use App\Models\Topic;
 use Illuminate\Support\Str;
 
@@ -106,7 +106,7 @@ class QuizController extends Controller
 
         // Collect questions from quiz topics
         $topicIds = $quiz->topics->pluck('id')->toArray();
-        $questions = \Harishdurga\LaravelQuiz\Models\Question::whereHas('topics', function ($q) use ($topicIds) {
+        $questions = \App\Models\Question::whereHas('topics', function ($q) use ($topicIds) {
             $q->whereIn('topics.id', $topicIds);
         })->with('options')->get();
 
@@ -125,7 +125,7 @@ class QuizController extends Controller
 
         $quiz->questions()->attach($data['question_ids']);
 
-        return redirect()->route('quizzes.show', $quiz)->with('success', 'Questions attached to quiz successfully');
+    return redirect()->route('quizzes.show', $quiz->id)->with('success', 'Questions attached to quiz successfully');
     }
 
     public function destroy(Quiz $quiz)

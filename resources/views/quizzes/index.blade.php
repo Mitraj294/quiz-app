@@ -36,7 +36,7 @@
                     @if(isset($quizzes) && $quizzes->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($quizzes as $quiz)
-                                <a href="{{ route('quizzes.show', $quiz) }}" 
+                                <a href="{{ route('quizzes.show', $quiz->id) }}" 
                                    class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                     <h4 class="font-semibold mb-2">{{ $quiz->name }}</h4>
                                     @if($quiz->description)

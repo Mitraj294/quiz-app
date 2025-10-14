@@ -72,7 +72,7 @@
                     @if(isset($topics) && $topics->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($topics as $topic)
-                                <a href="{{ route('topics.show', $topic) }}" 
+                                <a href="{{ route('topics.show', $topic->id) }}" 
                                    class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                     <h4 class="font-semibold mb-2">{{ $topic->name }}</h4>
                                     @if($topic->description)
