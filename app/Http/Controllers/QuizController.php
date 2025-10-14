@@ -159,8 +159,8 @@ class QuizController extends Controller
     public function createQuestion(Quiz $quiz)
     {
         $questionTypes = [
-            1 => 'Multiple Choice (Single Answer)',
-            2 => 'Multiple Choice (Multiple Answers)',
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
             3 => 'Text / Short Answer',
         ];
 
@@ -183,16 +183,20 @@ class QuizController extends Controller
             'marks' => self::RULE_NULLABLE_NUM_MIN0,
             'negative_marks' => self::RULE_NULLABLE_NUM_MIN0,
             'is_optional' => 'nullable|boolean',
+            'media_url' => self::RULE_NULLABLE_STRING,
+            'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
         // create the question using vendor model
         $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
-            'name' => [1 => 'Multiple Choice (Single Answer)', 2 => 'Multiple Choice (Multiple Answers)', 3 => 'Text / Short Answer'][$data['question_type']] ?? 'Unknown'
+            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => 'Text / Short Answer'][$data['question_type']] ?? 'Unknown'
         ]);
 
         $question = \Harishdurga\LaravelQuiz\Models\Question::create([
             'name' => $data['question_text'],
             'question_type_id' => $questionTypeModel->id,
+            'media_url' => $data['media_url'] ?? null,
+            'media_type' => $data['media_type'] ?? null,
         ]);
 
         // Attach to the first topic of the quiz if available
@@ -276,6 +280,18 @@ class QuizController extends Controller
 
         return redirect()->route('quizzes.show', $quiz->id)
             ->with('success', 'Questions attached/updated to quiz successfully');
+    }
+
+    /**
+     * Detach a question from the quiz (remove from quiz_questions pivot table only)
+     */
+    public function detachQuestion(Quiz $quiz, $questionId)
+    {
+        \App\Models\QuizQuestion::where('quiz_id', $quiz->id)
+            ->where('question_id', $questionId)
+            ->delete();
+
+        return redirect()->back()->with('success', 'Question removed from quiz successfully');
     }
 
     public function destroy(Quiz $quiz)

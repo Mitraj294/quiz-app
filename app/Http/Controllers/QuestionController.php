@@ -14,8 +14,8 @@ class QuestionController extends Controller
     {
         // Provide the topic and available question types
         $questionTypes = [
-            1 => 'Multiple Choice (Single Answer)',
-            2 => 'Multiple Choice (Multiple Answers)',
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
             3 => 'Text / Short Answer'
         ];
 
@@ -32,12 +32,14 @@ class QuestionController extends Controller
             'correct' => 'array',
             'correct.*' => 'nullable|integer',
             'text_answer' => 'nullable|string',
+            'media_url' => 'nullable|string',
+            'media_type' => 'nullable|string',
         ]);
 
         // Map numeric type to human-friendly name and ensure the question_type exists
         $typeMap = [
-            1 => 'Multiple Choice (Single Answer)',
-            2 => 'Multiple Choice (Multiple Answers)',
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
             3 => 'Text / Short Answer',
         ];
 
@@ -55,6 +57,8 @@ class QuestionController extends Controller
             $question = VendorQuestion::create([
                 'name' => $data['question_text'],
                 'question_type_id' => $questionTypeModel->id,
+                'media_url' => $data['media_url'] ?? null,
+                'media_type' => $data['media_type'] ?? null,
             ]);
 
             // Attach to topic via topicable morph
@@ -100,5 +104,114 @@ class QuestionController extends Controller
             'name' => $text,
             'is_correct' => true,
         ]);
+    }
+
+    /**
+     * Show the form for editing a question
+     */
+    public function edit($questionId)
+    {
+        $question = VendorQuestion::with(['options', 'questionType'])->findOrFail($questionId);
+        
+        // Map question type to the numeric format expected by the form
+        $typeMap = [
+            'multiple_choice_single_answer' => 1,
+            'multiple_choice_multiple_answer' => 2,
+            'Text / Short Answer' => 3,
+        ];
+        
+        $questionTypes = [
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
+            3 => 'Text / Short Answer'
+        ];
+        
+        $currentType = $typeMap[$question->questionType->name] ?? 1;
+        
+        return view('questions.edit', compact('question', 'questionTypes', 'currentType'));
+    }
+
+    /**
+     * Update a question
+     */
+    public function update(Request $request, $questionId)
+    {
+        $data = $request->validate([
+            'question_type' => 'required|in:1,2,3',
+            'question_text' => 'required|string',
+            'options' => 'array',
+            'options.*' => 'nullable|string',
+            'correct' => 'array',
+            'correct.*' => 'nullable|integer',
+            'text_answer' => 'nullable|string',
+            'media_url' => 'nullable|string',
+            'media_type' => 'nullable|string',
+        ]);
+
+        $typeMap = [
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
+            3 => 'Text / Short Answer',
+        ];
+
+        $typeName = $typeMap[$data['question_type']] ?? 'Unknown';
+        $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
+            'name' => $typeName,
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $questionId, $questionTypeModel) {
+            $question = VendorQuestion::findOrFail($questionId);
+            
+            // Update question
+            $question->update([
+                'name' => $data['question_text'],
+                'question_type_id' => $questionTypeModel->id,
+                'media_url' => $data['media_url'] ?? null,
+                'media_type' => $data['media_type'] ?? null,
+            ]);
+
+            // Delete existing options
+            VendorOption::where('question_id', $questionId)->delete();
+
+            // Re-create options
+            if (in_array($data['question_type'], [1,2])) {
+                $this->storeMcqOptions($questionId, $data['options'] ?? [], $data['correct'] ?? []);
+            }
+
+            if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
+                $this->storeTextAnswerOption($questionId, $data['text_answer']);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Question updated successfully');
+    }
+
+    /**
+     * Delete a question
+     */
+    public function destroy($questionId)
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($questionId) {
+            $question = VendorQuestion::findOrFail($questionId);
+            
+            // Delete options first
+            VendorOption::where('question_id', $questionId)->delete();
+            
+            // Delete topicable relationships
+            \Illuminate\Support\Facades\DB::table('topicables')
+                ->where('topicable_type', 'LIKE', '%Question%')
+                ->where('topicable_id', $questionId)
+                ->delete();
+            
+            // Delete quiz_questions relationships
+            \Illuminate\Support\Facades\DB::table('quiz_questions')
+                ->where('question_id', $questionId)
+                ->delete();
+            
+            // Delete the question
+            $question->delete();
+        });
+
+        return redirect()->back()->with('success', 'Question deleted successfully');
     }
 }

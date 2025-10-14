@@ -7,6 +7,24 @@
 
     <div class="py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+            <!-- Success Message -->
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <!-- Error Messages -->
+            @if($errors->any())
+                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    <ul class="list-disc list-inside">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <form method="POST" action="{{ route('quizzes.questions.attach', $quiz->id) }}" id="attach-questions-form">
                     @csrf
@@ -91,6 +109,24 @@
                                                     <span class="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded">Already Added</span>
                                                 @endif
                                             </label>
+                                            
+                                            @if($question->media_url)
+                                                <div class="my-4 mb-2 mt-2">
+                                                    @if($question->media_type === 'image')
+                                                        <img src="{{ asset($question->media_url) }}" alt="Question Media" class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                    @elseif($question->media_type === 'video')
+                                                        <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                            <source src="{{ asset($question->media_url) }}" type="video/mp4">
+                                                            Your browser does not support the video tag.
+                                                        </video>
+                                                    @elseif($question->media_type === 'audio')
+                                                        <audio controls class="w-full max-w-md">
+                                                            <source src="{{ asset($question->media_url) }}" type="audio/mpeg">
+                                                            Your browser does not support the audio tag.
+                                                        </audio>
+                                                    @endif
+                                                </div>
+                                            @endif
                                             @if($question->options && $question->options->count() > 0)
                                                 <ul class="list-disc list-inside text-lg font-semibold text-gray-500 mt-2">
                                                     @foreach($question->options as $opt)
@@ -126,7 +162,8 @@
                                                         <option value="no" {{ !$hasNegativeMarks ? 'selected' : '' }}>No</option>
                                                         <option value="yes" {{ $hasNegativeMarks ? 'selected' : '' }}>Yes</option>
                                                     </select>
-                                                    <select name="negative_marks[{{ $question->id }}]" 
+                                                    <select id="negative_marks_{{ $question->id }}"
+                                                            name="negative_marks[{{ $question->id }}]" 
                                                             class="w-full text-sm rounded border-gray-300 {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks"
                                                             data-question-id="{{ $question->id }}">
                                                         <option value="0" {{ $defaultNegativeMarks == 0 ? 'selected' : '' }}>No negative marking</option>
@@ -151,6 +188,25 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Edit and Delete Actions -->
+                                    <div class="mt-3 flex gap-2">
+                                        <a href="{{ route('questions.edit', $question->id) }}" 
+                                           class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                                            Edit
+                                        </a>
+                                        <form action="{{ route('questions.destroy', $question->id) }}" 
+                                              method="POST" 
+                                              onsubmit="return confirm('Permanently delete this question? This cannot be undone!')"
+                                              class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" 
+                                                    class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         @empty
@@ -158,7 +214,7 @@
                         @endforelse
                    </div>
                     <div class="mt-6 flex gap-4">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <button type="submit" onclick="return validateForm()" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Attach Selected
                         </button>
                         <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded">Cancel</a>
@@ -169,6 +225,43 @@
     </div>
 
     <script>
+        // Format number helper
+        function formatNumber(num) {
+            return Math.round(num * 100) / 100;
+        }
+
+        // Update negative marks options dynamically based on marks value
+        function updateNegativeOptionsForQuestion(questionId) {
+            const marksInput = document.getElementById(`marks_${questionId}`);
+            const negativeSelect = document.getElementById(`negative_marks_${questionId}`);
+            
+            if (!marksInput || !negativeSelect) return;
+            
+            const marks = parseFloat(marksInput.value) || 1;
+            const currentValue = negativeSelect.value;
+            
+            // Calculate negative marks fractions based on current marks
+            const fractions = [
+                { value: 0, label: 'No negative marking' },
+                { value: formatNumber(marks / 4), label: `1/4 (${formatNumber(marks / 4)})` },
+                { value: formatNumber(marks / 3), label: `1/3 (${formatNumber(marks / 3)})` },
+                { value: formatNumber(marks / 2), label: `1/2 (${formatNumber(marks / 2)})` },
+                { value: formatNumber(marks), label: `Full (${formatNumber(marks)})` }
+            ];
+            
+            // Clear and rebuild options
+            negativeSelect.innerHTML = '';
+            fractions.forEach(frac => {
+                const option = document.createElement('option');
+                option.value = frac.value;
+                option.textContent = frac.label;
+                negativeSelect.appendChild(option);
+            });
+            
+            // Try to maintain similar selection (by relative position)
+            negativeSelect.value = currentValue;
+        }
+
         // Toggle default negative marks dropdown
         function toggleDefaultNegativeMarks(value) {
             const dropdown = document.getElementById('default_negative_marks');
@@ -248,5 +341,33 @@
                 checkbox.checked = !allChecked;
             });
         }
+
+        // Validate form before submission
+        function validateForm() {
+            const checkedBoxes = document.querySelectorAll('.question-checkbox:checked');
+            
+            if (checkedBoxes.length === 0) {
+                alert('Please select at least one question to attach!');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Initialize dynamic negative marks on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all marks inputs
+            document.querySelectorAll('.question-marks').forEach(input => {
+                const questionId = input.dataset.questionId;
+                
+                // Initialize negative marks options based on current marks value
+                updateNegativeOptionsForQuestion(questionId);
+                
+                // Add listener for future changes
+                input.addEventListener('input', function() {
+                    updateNegativeOptionsForQuestion(questionId);
+                });
+            });
+        });
     </script>
 </x-app-layout>

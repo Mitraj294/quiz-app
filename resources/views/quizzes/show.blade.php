@@ -75,6 +75,24 @@
                                     <div class="flex-1">
                                         <p class="font-semibold text-gray-900 mb-3 text-xl">{{ $quizQuestion->question->name }}</p>
 
+                                        @if($quizQuestion->question->media_url)
+                                            <div class="my-4 mb-2 mt-2">
+                                                @if($quizQuestion->question->media_type === 'image')
+                                                    <img src="{{ asset($quizQuestion->question->media_url) }}" alt="Question Media" class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                @elseif($quizQuestion->question->media_type === 'video')
+                                                    <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                        <source src="{{ asset($quizQuestion->question->media_url) }}" type="video/mp4">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                @elseif($quizQuestion->question->media_type === 'audio')
+                                                    <audio controls class="w-full max-w-md">
+                                                        <source src="{{ asset($quizQuestion->question->media_url) }}" type="audio/mpeg">
+                                                        Your browser does not support the audio tag.
+                                                    </audio>
+                                                @endif
+                                            </div>
+                                        @endif
+
                                         @if($quizQuestion->question->options && $quizQuestion->question->options->count() > 0)
                                         <ul class="space-y-2 mt-3">
                                             @foreach($quizQuestion->question->options as $option)
@@ -119,6 +137,40 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Edit and Delete Actions (Admin only) -->
+                        @auth
+                        @if(Auth::user()->isAdmin())
+                        <div class="mt-3 flex gap-2 justify-end">
+                            <a href="{{ route('questions.edit', $quizQuestion->question->id) }}" 
+                               class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                                Edit Question
+                            </a>
+                            <form action="{{ route('quizzes.questions.detach', [$quiz->id, $quizQuestion->question->id]) }}" 
+                                  method="POST" 
+                                  onsubmit="return confirm('Remove this question from the quiz?')"
+                                  class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">
+                                    Remove from Quiz
+                                </button>
+                            </form>
+                            <form action="{{ route('questions.destroy', $quizQuestion->question->id) }}" 
+                                  method="POST" 
+                                  onsubmit="return confirm('Permanently delete this question? This cannot be undone!')"
+                                  class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                    Delete Forever
+                                </button>
+                            </form>
+                        </div>
+                        @endif
+                        @endauth
                     </div>
                     @endforeach
                 </div>
