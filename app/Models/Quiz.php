@@ -2,33 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Harishdurga\LaravelQuiz\Models\Quiz as BaseQuiz;
 
-class Quiz extends Model
+/**
+ * App Quiz model that extends the package Quiz model to ensure compatibility
+ * with the package migrations and attribute accessors.
+ */
+class Quiz extends BaseQuiz
 {
-    protected $fillable = [
-        'title',
-        'description',
-        'max_attempts',
-        'total_marks',
-        'pass_marks',
-        'is_published',
-    ];
-
-    public function questions(): HasMany
-    {
-        return $this->hasMany(Question::class);
-    }
-
-    public function attempts(): HasMany
-    {
-        return $this->hasMany(Attempt::class);
-    }
-
-    public function topics(): MorphToMany
-    {
-        return $this->morphToMany(Topic::class, 'topicable');
-    }
+    // Inherit behavior from vendor model
 }

@@ -9,9 +9,25 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Success Message -->
             @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                <div id="success-message" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
                     {{ session('success') }}
                 </div>
+                <script>
+                    (function(){
+                        // Hide the success message after 5 seconds
+                        const el = document.getElementById('success-message');
+                        if (!el) return;
+                        setTimeout(() => {
+                            try {
+                                el.style.transition = 'opacity 0.4s ease';
+                                el.style.opacity = '0';
+                                setTimeout(() => el.remove(), 400);
+                            } catch (e) {
+                                el.remove();
+                            }
+                        }, 5000);
+                    })();
+                </script>
             @endif
 
             <!-- Error Messages -->
@@ -46,7 +62,7 @@
                         @if(Auth::user()->isAdmin())
                             <div class="flex gap-4 mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                 <button type="button" 
-                                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-black rounded-lg hover:bg-blue-700 transition shadow-sm"
+                                        class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                         onclick="document.getElementById('create-subtopic-form').classList.toggle('hidden')">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -54,13 +70,21 @@
                                     Create Sub-Topic
                                 </button>
                                 <button type="button" 
-                                        class="flex items-center gap-2 px-4 py-2 bg-green-600 text-black rounded-lg hover:bg-green-700 transition shadow-sm"
+                                         class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                         onclick="document.getElementById('create-quiz-form').classList.toggle('hidden')">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                     </svg>
                                     Create Quiz
                                 </button>
+                                <a href="{{ route('topics.questions.create', $topic) }}" 
+                                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                        >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Add Questions
+                                </a>
                             </div>
 
                         <!-- Create Sub-Topic Form -->
@@ -81,7 +105,8 @@
                                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700">
+                                    <button type="submit"  class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                          >
                                         Create Sub-Topic
                                     </button>
                                     <button type="button" 
@@ -126,15 +151,10 @@
                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" name="is_published" value="1" class="rounded border-gray-300 text-indigo-600">
-                                        <span class="ml-2 text-sm">Publish immediately</span>
-                                    </label>
-                                </div>
+                       
                                 <div class="flex items-center gap-4">
-                                    <button type="submit" class="px-4 py-2 bg-green-600 text-black rounded hover:bg-green-700">
-                                        Create Quiz
+                                    <button type="submit"  class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Create Quiz
                                     </button>
                                     <button type="button" 
                                             class="text-sm text-gray-600 hover:text-gray-900"

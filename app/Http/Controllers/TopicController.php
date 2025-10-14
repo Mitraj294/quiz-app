@@ -30,9 +30,13 @@ class TopicController extends Controller
         Topic::create($data);
 
         // If creating a sub-topic, redirect back to parent topic
-        if ($data['parent_id']) {
-            return redirect()->route('topics.show', $data['parent_id'])
-                ->with('success', 'Sub-topic created successfully!');
+        $parentId = $data['parent_id'] ?? null;
+        if ($parentId) {
+            $parent = Topic::find($parentId);
+            if ($parent) {
+                return redirect()->route('topics.show', $parent)
+                    ->with('success', 'Sub-topic created successfully!');
+            }
         }
 
         return redirect()->route('topics.index')->with('success', 'Topic created successfully!');

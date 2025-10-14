@@ -2,19 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Harishdurga\LaravelQuiz\Models\QuestionOption as BaseQuestionOption;
 
-class Option extends Model
+/**
+ * App Option model that extends the package QuestionOption model.
+ */
+class Option extends BaseQuestionOption
 {
-    protected $fillable = [
-        'question_id',
-        'option_text',
-        'is_correct',
-    ];
-
-    public function question(): BelongsTo
-    {
-        return $this->belongsTo(Question::class);
-    }
+    // Inherit behavior from vendor model
 }

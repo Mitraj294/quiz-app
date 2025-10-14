@@ -23,9 +23,10 @@ Route::middleware('auth')->group(function () {
     
     // Topic management (simple CRUD: list, create, show)
     Route::get('/topics', [\App\Http\Controllers\TopicController::class, 'index'])->name('topics.index');
-    Route::post('/topics', [\App\Http\Controllers\TopicController::class, 'store'])->name('topics.store');
+    // Only admins should be able to create topics
+    Route::post('/topics', [\App\Http\Controllers\TopicController::class, 'store'])->name('topics.store')->middleware('role:admin');
     Route::get('/topics/{topic}', [\App\Http\Controllers\TopicController::class, 'show'])->name('topics.show');
-    Route::get('/topics/{topic}/quizzes/create', [\App\Http\Controllers\QuizController::class, 'create'])->name('quizzes.create');
+    // Note: quiz creation and management routes are restricted to admins (declared below)
     
     // Quiz routes - list all quizzes
     Route::get('/quizzes', [\App\Http\Controllers\QuizController::class, 'index'])->name('quizzes.index');
@@ -33,9 +34,13 @@ Route::middleware('auth')->group(function () {
 
 // Admin-only quiz management routes (specific routes MUST come before dynamic {quiz} route)
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    // Admin-only quiz management
     Route::get('/quizzes/create', [\App\Http\Controllers\QuizController::class, 'create'])->name('quizzes.create');
     Route::post('/quizzes', [\App\Http\Controllers\QuizController::class, 'store'])->name('quizzes.store');
     Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'destroy'])->name('quizzes.destroy');
+    // Admin-only question management for topics
+    Route::get('/topics/{topic}/questions/create', [\App\Http\Controllers\QuestionController::class, 'create'])->name('topics.questions.create');
+    Route::post('/topics/{topic}/questions', [\App\Http\Controllers\QuestionController::class, 'store'])->name('topics.questions.store');
 });
 
 // Quiz show route - MUST come after /quizzes/create to avoid route conflict

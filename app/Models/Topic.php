@@ -2,20 +2,38 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Harishdurga\LaravelQuiz\Models\Topic as BaseTopic;
 
-class Topic extends Model
+/**
+ * App Topic model that extends vendor's Topic model to reuse table/attribute mappings.
+ */
+class Topic extends BaseTopic
 {
-    protected $fillable = ['name', 'slug', 'description', 'parent_id', 'is_active'];
+    // Keep this class intentionally small — it inherits behavior from the package model.
 
-    public function questions(): MorphToMany
+    /**
+     * Resolve route binding so both slug and numeric id work in URLs.
+     *
+     * Examples:
+     *  - /topics/my-topic-slug  (slug)
+     *  - /topics/9              (numeric id)
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    public function resolveRouteBinding($value, $field = null)
     {
-        return $this->morphedByMany(Question::class, 'topicable');
-    }
+        $field = $field ?? $this->getRouteKeyName();
 
-    public function quizzes(): MorphToMany
-    {
-        return $this->morphedByMany(Quiz::class, 'topicable');
+        // First try the configured route key (usually 'slug')
+        $model = static::where($field, $value)->first();
+
+        // If not found and value looks numeric, try by id as a fallback
+        if (! $model && is_numeric($value)) {
+            $model = static::find($value);
+        }
+
+        return $model;
     }
 }
