@@ -41,6 +41,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Admin-only question management for topics
     Route::get('/topics/{topic}/questions/create', [\App\Http\Controllers\QuestionController::class, 'create'])->name('topics.questions.create');
     Route::post('/topics/{topic}/questions', [\App\Http\Controllers\QuestionController::class, 'store'])->name('topics.questions.store');
+    // Media upload route for question media
+    Route::post('/media/upload', [\App\Http\Controllers\MediaController::class, 'upload'])->name('media.upload');
         // Admin: create a question and attach it directly to a quiz
         Route::get('/quizzes/{quiz}/questions/create', [\App\Http\Controllers\QuizController::class, 'createQuestion'])->name('quizzes.questions.create');
         Route::post('/quizzes/{quiz}/questions', [\App\Http\Controllers\QuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
