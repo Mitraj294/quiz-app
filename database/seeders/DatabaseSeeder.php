@@ -20,5 +20,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(RoleAndAdminSeeder::class);
+        // Seed package question types (from package or local copy)
+        if (class_exists(\Harishdurga\LaravelQuiz\Database\Seeders\QuestionTypeSeeder::class)) {
+            $this->call(\Harishdurga\LaravelQuiz\Database\Seeders\QuestionTypeSeeder::class);
+        }
+        // Seed demo quiz content
+        $this->call(\Database\Seeders\QuizDemoSeeder::class);
     }
 }

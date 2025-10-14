@@ -3,6 +3,11 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// Reusable path constant to avoid duplicated literal
+if (! defined('PROFILE_PATH')) {
+    define('PROFILE_PATH', '/profile');
+}
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -12,9 +17,9 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get(PROFILE_PATH, [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch(PROFILE_PATH, [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete(PROFILE_PATH, [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Topic management (simple CRUD: list, create, show)
     Route::get('/topics', [\App\Http\Controllers\TopicController::class, 'index'])->name('topics.index');
