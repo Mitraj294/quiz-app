@@ -129,7 +129,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Take a Quiz</h3>
                             <p class="text-sm text-gray-600 mb-4">Start a new quiz and test your knowledge</p>
-                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Start Now →</a>
+                            <a href="{{ route('quizzes.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Browse Quizzes →</a>
                         </div>
                     </div>
 

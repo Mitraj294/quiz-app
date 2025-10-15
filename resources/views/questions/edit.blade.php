@@ -25,7 +25,7 @@
                         <label for="question_type" class="block text-sm font-medium mb-2">Question Type</label>
                         <select name="question_type" id="question_type" onchange="onTypeChange()" class="w-full rounded-md border-gray-300">
                             @foreach($questionTypes as $key => $label)
-                                <option value="{{ $key }}" {{ $currentType == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $key }}" {{ $currentType == $key ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $label)) }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     // Admin-only quiz management
     Route::get('/quizzes/create', [\App\Http\Controllers\QuizController::class, 'create'])->name('quizzes.create');
+    // Admin: edit quiz
+    Route::get('/quizzes/{quiz}/edit', [\App\Http\Controllers\QuizController::class, 'edit'])->name('quizzes.edit');
+    Route::put('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'update'])->name('quizzes.update');
     Route::post('/quizzes', [\App\Http\Controllers\QuizController::class, 'store'])->name('quizzes.store');
     Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'destroy'])->name('quizzes.destroy');
     // Admin-only question management for topics
@@ -58,11 +61,22 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Admin: edit a question within a quiz (edit question and quiz-specific settings)
     Route::get('/quizzes/{quiz}/questions/{question}/edit', [\App\Http\Controllers\QuizController::class, 'editQuestion'])->name('quizzes.questions.edit');
     Route::put('/quizzes/{quiz}/questions/{question}', [\App\Http\Controllers\QuizController::class, 'updateQuestion'])->name('quizzes.questions.update');
+
+    // Admin-only management routes (quiz details and editing are still handled
+    // by the same controller, but the public `quizzes.show` route is defined
+    // below so regular users can view quiz details without admin privileges.)
+    // Admin: publish/unpublish a quiz
+    Route::post('/quizzes/{quiz}/publish', [\App\Http\Controllers\QuizController::class, 'publish'])->name('quizzes.publish');
 });
 
 // Quiz show route - MUST come after /quizzes/create to avoid route conflict
 Route::middleware('auth')->group(function () {
+    // Quiz attempt routes (users can take quizzes)
+    // Public quiz detail and attempt routes (authenticated users)
     Route::get('/quizzes/{quiz}', [\App\Http\Controllers\QuizController::class, 'show'])->name('quizzes.show');
+    Route::get('/quizzes/{quiz}/attempt', [\App\Http\Controllers\AttemptController::class, 'start'])->name('quizzes.attempt');
+    Route::post('/quizzes/{quiz}/submit', [\App\Http\Controllers\AttemptController::class, 'submit'])->name('quizzes.submit');
+    
 });
 
 require __DIR__ . '/auth.php';

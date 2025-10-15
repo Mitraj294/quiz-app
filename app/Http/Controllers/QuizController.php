@@ -31,6 +31,57 @@ class QuizController extends Controller
         return view('quizzes.create', compact('topics'));
     }
 
+    /**
+     * Show the quiz edit form to admins
+     */
+    public function edit(Quiz $quiz)
+    {
+        $topics = Topic::orderBy('name')->get();
+        return view('quizzes.edit', compact('quiz', 'topics'));
+    }
+
+    /**
+     * Update quiz fields
+     */
+    public function update(Request $request, Quiz $quiz)
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'description' => self::RULE_NULLABLE_STRING,
+            'total_marks' => 'nullable|numeric|min:0',
+            'pass_marks' => 'nullable|numeric|min:0',
+            'max_attempts' => self::RULE_NULLABLE_INT_MIN0,
+            'is_published' => 'nullable|in:0,1',
+            'duration' => self::RULE_NULLABLE_INT_MIN0,
+            'valid_from' => 'nullable|date',
+            'valid_upto' => 'nullable|date',
+            'time_between_attempts' => self::RULE_NULLABLE_INT_MIN0,
+            'topic_id' => 'nullable|exists:topics,id',
+        ];
+
+        $data = $request->validate($rules);
+
+        $quiz->update([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'total_marks' => $data['total_marks'] ?? $quiz->total_marks,
+            'pass_marks' => $data['pass_marks'] ?? $quiz->pass_marks,
+            'max_attempts' => $data['max_attempts'] ?? $quiz->max_attempts,
+            'is_published' => isset($data['is_published']) ? (int)$data['is_published'] : $quiz->is_published,
+            'duration' => $data['duration'] ?? $quiz->duration,
+            'valid_from' => $data['valid_from'] ?? $quiz->valid_from,
+            'valid_upto' => $data['valid_upto'] ?? $quiz->valid_upto,
+            'time_between_attempts' => $data['time_between_attempts'] ?? $quiz->time_between_attempts,
+        ]);
+
+        // Attach or sync topic if provided
+        if (! empty($data['topic_id'])) {
+            $quiz->topics()->syncWithoutDetaching([$data['topic_id']]);
+        }
+
+        return redirect()->route('quizzes.show', $quiz->id)->with('success', 'Quiz updated successfully');
+    }
+
     public function store(Request $request)
     {
         // Validation rules depend on topic_option
@@ -454,5 +505,31 @@ class QuizController extends Controller
 
         return redirect()->route('topics.index')
             ->with('success', 'Quiz deleted successfully!');
+    }
+
+    /**
+     * Toggle publish state for a quiz (admin only).
+     */
+    public function publish(Request $request, Quiz $quiz)
+    {
+        // Toggle the boolean state
+        $quiz->is_published = $quiz->is_published ? 0 : 1;
+        // If we're publishing, recalculate marks from quiz_questions
+        if ($quiz->is_published) {
+            $total = \App\Models\QuizQuestion::where('quiz_id', $quiz->id)->sum('marks');
+            $pass = (int) round($total / 3);
+
+            // Update model fields
+            $quiz->total_marks = $total;
+            $quiz->pass_marks = $pass;
+        }
+
+        $quiz->save();
+
+        $message = $quiz->is_published ? 'Quiz published successfully' : 'Quiz unpublished successfully';
+
+        Log::info('Quiz publish toggled', ['quiz_id' => $quiz->id, 'is_published' => $quiz->is_published, 'total_marks' => $quiz->total_marks ?? null, 'pass_marks' => $quiz->pass_marks ?? null]);
+
+        return redirect()->route('quizzes.show', $quiz->id)->with('success', $message);
     }
 }

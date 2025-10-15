@@ -25,34 +25,75 @@
                         <span class="text-sm text-gray-600">Max Attempts</span>
                         <p class="text-lg font-semibold">{{ $quiz->max_attempts ?: 'Unlimited' }}</p>
                     </div>
-                    <div>
-                        <span class="text-sm text-gray-600">Status</span>
-                        <p class="text-lg font-semibold">
-                            @if($quiz->is_published)
-                            <span class="text-green-600">Published</span>
-                            @else
-                            <span class="text-yellow-600">Draft</span>
-                            @endif
-                        </p>
-                    </div>
+                    @auth
+                        @if(Auth::user()->isAdmin())
+                            <div>
+                                <span class="text-sm text-gray-600">Status</span>
+                                <p class="text-lg font-semibold">
+                                    @if($quiz->is_published)
+                                        <span class="text-green-600">Published</span>
+                                    @else
+                                        <span class="text-yellow-600">Draft</span>
+                                    @endif
+                                </p>
+                            </div>
+                        @else
+                            <div>
+                                <span class="text-sm text-gray-600">Your Attempts</span>
+                                <p class="text-lg font-semibold">
+                                  0
+                                </p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600">Status</span>
+                                <p class="text-lg font-semibold">
+                                    @if($quiz->is_published)
+                                        <span class="text-green-600">Submited</span>
+                                    @else
+                                        <span class="text-yellow-600">Yet To Attempt</span>
+                                    @endif
+                                </p>
+                            </div>
+                            
+                        @endif
+                    @endauth
                 </div>
 
                 @auth
                 @if(Auth::user()->isAdmin())
-                <div class="flex gap-4">
-                    <a href="{{ route('quizzes.questions.select', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        Add from existing questions
-                    </a>
-                    <a href="{{ route('quizzes.questions.create', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        Create & Attach to Quiz
-                    </a>
-
-                    <a href="{{ route('topics.questions.create', $quiz->topics->first()->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        Create new question
-                    </a>
-
-
+                <div class="flex gap-4 justify-between">
+                    <div class="flex gap-4">
+                        <a href="{{ route('quizzes.questions.select', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            Add from existing questions
+                        </a>
+                        <a href="{{ route('quizzes.questions.create', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            Create & Attach to Quiz
+                        </a>
+                        <a href="{{ route('topics.questions.create', $quiz->topics->first()->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                            Create new question
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ route('quizzes.edit', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 mr-2">
+                            Edit Quiz
+                        </a>
+                        <form action="{{ route('quizzes.publish', $quiz->id) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center px-4 py-2 {{ $quiz->is_published ? 'bg-yellow-500 hover:bg-yellow-600 focus:bg-yellow-600 active:bg-yellow-700 focus:ring-yellow-500' : 'bg-green-600 hover:bg-green-500 focus:bg-green-500 active:bg-green-700 focus:ring-green-500' }} border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150">
+                                {{ $quiz->is_published ? 'Unpublish' : 'Publish' }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                @else
+                <!-- Regular user: show Start Quiz button -->
+                @if($quiz->questions->count() > 0 && $quiz->is_published)
+                <div class="flex gap-4">
+                    <a href="{{ route('quizzes.attempt', $quiz->id) }}" class="inline-flex items-center px-6 py-3 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        Start Quiz
+                    </a>
+                </div>
+                @endif
                 @endif
                 @endauth
             </div>
@@ -120,20 +161,29 @@
 
                                 <!-- Question Settings Badge (fixed width, centered content) -->
                                 <div class="ml-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-base w-40 flex flex-col items-center">
-                                    <div class="text-center space-y-2 w-full">
-                                        <div>
-                                            <div class="text-sm text-gray-600">Marks</div>
-                                            <div class="font-semibold text-indigo-700 text-xl">{{ $quizQuestion->marks }}</div>
+                                    <div class="text-center w-full">
+                                        <div class="flex flex-row items-center justify-center gap-4">
+                                            <div>
+                                                <div class="text-sm text-gray-600">Marks</div>
+                                                <div class="font-semibold text-indigo-700 text-xl">{{ $quizQuestion->marks }}</div>
+                                            </div>
+                                            @if($quizQuestion->negative_marks > 0)
+                                            <div>
+                                                <div class="text-sm text-gray-600">Negative</div>
+                                                <div class="font-semibold text-red-600 text-xl">-{{ $quizQuestion->negative_marks }}</div>
+                                            </div>
+                                            @endif
                                         </div>
-                                        @if($quizQuestion->negative_marks > 0)
-                                        <div>
-                                            <div class="text-sm text-gray-600">Negative</div>
-                                            <div class="font-semibold text-red-600 text-xl">-{{ $quizQuestion->negative_marks }}</div>
-                                        </div>
-                                        @endif
                                         @if($quizQuestion->is_optional)
                                         <div>
                                             <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded">Optional</span>
+                                        </div>
+                                        @endif
+                                              @if($quizQuestion->question->question_type->id == 3)
+                                        <div>
+                                            <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+                                                Can answer multiple options.
+                                            </span>
                                         </div>
                                         @endif
                                     </div>
@@ -143,7 +193,7 @@
                             <!-- Edit and Delete Actions (Admin only) -->
                             @auth
                             @if(Auth::user()->isAdmin())
-                                <div class="mt-3 flex gap-2 justify-end">
+                            <div class="mt-3 flex gap-2 justify-end">
                                 <a href="{{ route('quizzes.questions.edit', ['quiz' => $quiz->id, 'question' => $quizQuestion->question->id]) }}"
                                     class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                                     Edit Question
@@ -176,7 +226,7 @@
                         </div>
                         @endforeach
                     </div>
-                    <div class="text-center py-8">
+                    <div class="text-left py-8">
 
                         @auth
                         @if(Auth::user()->isAdmin())

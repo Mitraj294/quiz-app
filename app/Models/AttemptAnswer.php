@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttemptAnswer extends Model
 {
-    protected $table = 'attempt_answers';
+    protected $table = 'quiz_attempt_answers';
 
     protected $fillable = [
-        'attempt_id',
+        'quiz_attempt_id',
         'question_id',
         'option_id',
         'answer_text',
@@ -18,7 +18,7 @@ class AttemptAnswer extends Model
 
     public function attempt(): BelongsTo
     {
-        return $this->belongsTo(Attempt::class);
+        return $this->belongsTo(Attempt::class, 'quiz_attempt_id');
     }
 
     public function question(): BelongsTo

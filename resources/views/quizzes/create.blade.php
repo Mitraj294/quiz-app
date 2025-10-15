@@ -173,7 +173,7 @@
                                 </div>
 
                                 <div class="mt-4">
-                                    <label for="negative_marking_settings" class="block text-sm font-medium mb-2">Negative Marking Settings (JSON)</label>
+                                    <label for="negative_marking_settings" class="block text-sm font-medium mb-2">Negative Marking Settings</label>
                                     <textarea name="negative_marking_settings" id="negative_marking_settings" rows="3" class="w-full rounded-md border-gray-300">{{ old('negative_marking_settings') }}</textarea>
                                 </div>
 

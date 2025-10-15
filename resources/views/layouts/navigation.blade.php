@@ -24,6 +24,9 @@
                             {{ __('Manage Topics') }}
                         </x-nav-link>
                     @else
+                        <x-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                            {{ __('Quizzes') }}
+                        </x-nav-link>
                         <x-nav-link :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Topics') }}
                         </x-nav-link>
@@ -92,6 +95,9 @@
                     {{ __('Manage Topics') }}
                 </x-responsive-nav-link>
             @else
+                <x-responsive-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                    {{ __('Quizzes') }}
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="url('/topics')" :active="request()->is('topics*')">
                     {{ __('Topics') }}
                 </x-responsive-nav-link>

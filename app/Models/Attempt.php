@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attempt extends Model
 {
+    protected $table = 'quiz_attempts';
+    
     protected $fillable = [
         'user_id',
         'quiz_id',
         'score',
         'passed',
+        'completed_at',
     ];
 
     public function user(): BelongsTo

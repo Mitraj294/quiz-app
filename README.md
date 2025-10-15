@@ -380,3 +380,178 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 	```
 
 Now visit `http://127.0.0.1:8000` to use the application — the Laravel server will serve the HTML and built assets. During development, the watch task will keep assets up-to-date.
+
+## 🔁 Setting up this project on another device
+
+The steps below walk you through getting the project running on a fresh machine. There are two recommended approaches:
+
+- Native (install PHP, Composer, Node, and a database on the host)
+- Docker / Laravel Sail (encapsulated, fast to get started)
+
+Choose the approach that best matches your environment.
+
+### Option A — Native install (Linux / macOS / WSL)
+
+1. Install system prerequisites
+
+  - PHP >= 8.2 with the following extensions enabled: mbstring, sqlite/pdo_sqlite, pdo_mysql, fileinfo, ctype, json, openssl, tokenizer, xml, curl, gd (or imagick)
+  - Composer (https://getcomposer.org/)
+  - Node.js >= 18 and npm or Yarn
+  - MySQL 8.0+ (or use SQLite for quick local setup)
+
+  On Ubuntu a quick install (example):
+
+  ```bash
+  sudo apt update
+  sudo apt install -y php8.2 php8.2-xml php8.2-mbstring php8.2-pdo php8.2-mysql php8.2-sqlite3 php8.2-curl php8.2-gd unzip curl
+  curl -sS https://getcomposer.org/installer | php && sudo mv composer.phar /usr/local/bin/composer
+  curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo apt install -y mysql-server
+  ```
+
+2. Clone and install
+
+  ```bash
+  git clone https://github.com/Mitraj294/quiz-app.git
+  cd quiz-app
+  composer install --no-interaction --prefer-dist
+  npm install
+  cp .env.example .env
+  php artisan key:generate
+  ```
+
+3. Configure `.env`
+
+  - Edit `.env` to set your DB credentials. For quick development you can use SQLite:
+
+  ```bash
+  touch database/database.sqlite
+  # then in .env set DB_CONNECTION=sqlite and comment out DB_HOST, DB_PORT etc
+  ```
+
+4. Migrate, seed, storage link
+
+  ```bash
+  php artisan migrate
+  php artisan db:seed   # optional
+  php artisan storage:link
+  ```
+
+5. Build assets and run
+
+  ```bash
+  npm run dev    # or npm run build for production
+  php artisan serve --host=127.0.0.1 --port=8000
+  ```
+
+6. Open `http://127.0.0.1:8000`
+
+### Option B — Docker & Laravel Sail (recommended for reproducible environments)
+
+This project includes a Docker setup compatible with Laravel Sail. Sail supplies a ready-to-run PHP + MySQL/Postgres environment.
+
+1. Ensure Docker (and docker-compose) is installed and running on your machine.
+
+2. From project root, start Sail (first install composer deps if not present):
+
+```bash
+# If composer not installed on host, use the provided script
+./vendor/bin/sail up -d
+# or if vendor not present, install composer deps first: composer install && ./vendor/bin/sail up -d
+```
+
+3. Run migrations and seed inside the container:
+
+```bash
+./vendor/bin/sail artisan migrate --force
+./vendor/bin/sail artisan db:seed --force
+./vendor/bin/sail artisan storage:link
+```
+
+4. Install and build assets inside the container (or build on host):
+
+```bash
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run dev
+```
+
+5. Visit the app at `http://localhost` (Sail maps ports automatically).
+
+Notes:
+
+- To stop the environment: `./vendor/bin/sail down`
+- To run an interactive shell: `./vendor/bin/sail shell`
+
+### Platform-specific tips
+
+- macOS: Use Homebrew to install PHP, Composer, Node. Docker Desktop works well for Sail.
+- Windows: Use WSL2 + Ubuntu for native installs; or use Docker Desktop with WSL integration and Sail.
+- File permissions: If you see permission errors when uploading files, ensure `storage/` and `bootstrap/cache` are writable by the webserver user (or adjust owner to your user during development):
+
+```bash
+sudo chown -R $USER:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+```
+
+### Running tests
+
+The project includes PHPUnit tests. Run them locally or via Sail.
+
+```bash
+# native
+./vendor/bin/phpunit
+
+# via sail
+./vendor/bin/sail php artisan test
+```
+
+### Common environment variables you may want to set in `.env`
+
+- APP_URL (example: http://localhost)
+- DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+- MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_ENCRYPTION, MAIL_FROM_ADDRESS
+- FILESYSTEM_DRIVER (default: public/local)
+
+### Troubleshooting
+
+- Error: "No application encryption key has been specified." — run `php artisan key:generate`.
+- Error: "syntax error, unexpected" during composer install — ensure you have a supported PHP version (>= 8.2).
+- File upload problems — check `php.ini` for `post_max_size` and `upload_max_filesize` and set them larger than 10MB if you need bigger uploads.
+- Database connection refused — confirm DB_HOST/DB_PORT and credentials in `.env` and that your DB server is running. For Sail use the provided container names.
+- Permissions errors — ensure `storage` and `bootstrap/cache` are writable.
+
+### Deployment notes (short)
+
+- Use `php artisan config:cache` and `php artisan route:cache` in production.
+- Use `npm run build` to create production assets.
+- Configure a process manager (supervisor) for queue workers and set up a cron entry for scheduled tasks.
+
+### Try it — quick checklist for a new device
+
+1. Clone repository
+2. Copy `.env.example` -> `.env` and set DB credentials
+3. composer install && npm install
+4. php artisan key:generate
+5. php artisan migrate --seed
+6. php artisan storage:link
+7. npm run dev && php artisan serve
+
+If you want, copy these exact commands to get started quickly (Linux/macOS):
+
+```bash
+git clone https://github.com/Mitraj294/quiz-app.git
+cd quiz-app
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+npm run dev &
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+## ✅ Changes made
+
+Added step-by-step setup instructions for native installs and Docker/Sail, platform tips, tests, troubleshooting, and a quick-start checklist.

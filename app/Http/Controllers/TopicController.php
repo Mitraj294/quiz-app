@@ -62,11 +62,14 @@ class TopicController extends Controller
 
         if ($user && $user->isAdmin()) {
             // Admins see all quizzes (including drafts)
-            $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)->get();
+            $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
+                ->with('questions')
+                ->get();
         } else {
             // Regular users see only published quizzes
             $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
                 ->where('is_published', 1)
+                ->with('questions')
                 ->get();
         }
 
