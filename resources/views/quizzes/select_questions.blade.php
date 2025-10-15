@@ -220,94 +220,75 @@
     </div>
 
     <script>
-        // Format number helper
-        function formatNumber(num) {
-            return Math.round(num * 100) / 100;
-        }
-
-        // Update negative marks options dynamically based on marks value
+        // Delegate negative-mark helpers to the shared NegativeMarks module
         function updateNegativeOptionsForQuestion(questionId) {
             const marksInput = document.getElementById(`marks_${questionId}`);
             const negativeSelect = document.getElementById(`negative_marks_${questionId}`);
-            
             if (!marksInput || !negativeSelect) return;
-            
             const marks = parseFloat(marksInput.value) || 1;
             const currentValue = negativeSelect.value;
-            
-            // Calculate negative marks fractions based on current marks
-            const fractions = [
-                { value: 0, label: 'No negative marking' },
-                { value: formatNumber(marks / 4), label: `1/4 (${formatNumber(marks / 4)})` },
-                { value: formatNumber(marks / 3), label: `1/3 (${formatNumber(marks / 3)})` },
-                { value: formatNumber(marks / 2), label: `1/2 (${formatNumber(marks / 2)})` },
-                { value: formatNumber(marks), label: `Full (${formatNumber(marks)})` }
-            ];
-            
-            // Clear and rebuild options
-            negativeSelect.innerHTML = '';
-            fractions.forEach(frac => {
-                const option = document.createElement('option');
-                option.value = frac.value;
-                option.textContent = frac.label;
-                negativeSelect.appendChild(option);
-            });
-            
-            // Try to maintain similar selection (by relative position)
-            negativeSelect.value = currentValue;
-        }
-
-        // Toggle default negative marks dropdown
-        function toggleDefaultNegativeMarks(value) {
-            const dropdown = document.getElementById('default_negative_marks');
-            if (value === 'yes') {
-                dropdown.classList.remove('hidden');
-            } else {
-                dropdown.classList.add('hidden');
+            if (window.NegativeMarks) {
+                window.NegativeMarks.updateNegativeOptionsForSelect(negativeSelect, marks, currentValue);
             }
         }
 
-        // Update default negative marks options based on default marks value
+        function toggleDefaultNegativeMarks(value) {
+            const dropdown = document.getElementById('default_negative_marks');
+            const toggle = document.getElementById('default_negative_marks_enabled');
+            if (window.NegativeMarks) {
+                window.NegativeMarks.toggleNegativeSelectVisibility(toggle, dropdown);
+            } else if (dropdown) {
+                if (value === 'yes') dropdown.classList.remove('hidden'); else dropdown.classList.add('hidden');
+            }
+        }
+
         function updateDefaultNegativeOptions() {
             const marksInput = document.getElementById('default_marks');
             const dropdown = document.getElementById('default_negative_marks');
             if (!marksInput || !dropdown) return;
-
             const marks = parseFloat(marksInput.value) || 1;
             const current = dropdown.value;
-
-            const options = [
-                { value: 0, label: 'No negative marking' },
-                { value: +(marks / 4).toFixed(2), label: `1/4 (${(marks / 4).toFixed(2)})` },
-                { value: +(marks / 3).toFixed(2), label: `1/3 (${(marks / 3).toFixed(2)})` },
-                { value: +(marks / 2).toFixed(2), label: `1/2 (${(marks / 2).toFixed(2)})` },
-                { value: +marks.toFixed(2), label: `Full (${marks.toFixed(2)})` },
-            ];
-
-            dropdown.innerHTML = '';
-            options.forEach(opt => {
-                const o = document.createElement('option');
-                o.value = String(opt.value);
-                o.textContent = opt.label;
-                dropdown.appendChild(o);
-            });
-
-            // try to restore previous selection if applicable
-            if (current) dropdown.value = current;
+            if (window.NegativeMarks) {
+                window.NegativeMarks.updateNegativeOptionsForSelect(dropdown, marks, current);
+            } else {
+                // fallback behaviour (should not be needed when bundled)
+                dropdown.innerHTML = '';
+                const options = [
+                    { value: 0, label: 'No negative marking' },
+                    { value: +(marks / 4).toFixed(2), label: `1/4 (${(marks / 4).toFixed(2)})` },
+                    { value: +(marks / 3).toFixed(2), label: `1/3 (${(marks / 3).toFixed(2)})` },
+                    { value: +(marks / 2).toFixed(2), label: `1/2 (${(marks / 2).toFixed(2)})` },
+                    { value: +marks.toFixed(2), label: `Full (${marks.toFixed(2)})` },
+                ];
+                options.forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = String(opt.value);
+                    o.textContent = opt.label;
+                    dropdown.appendChild(o);
+                });
+                if (current) dropdown.value = current;
+            }
         }
 
-        // Toggle individual question negative marks
-        // Accept either the element (from onchange: this) or a questionId (when called programmatically)
         function toggleQuestionNegativeMarks(elOrId, value) {
-            const questionId = (typeof elOrId === 'object' && elOrId !== null) ? elOrId.dataset.questionId : elOrId;
+            let toggleEl;
+            if (typeof elOrId === 'object' && elOrId !== null) toggleEl = elOrId;
+            else toggleEl = document.getElementById(`negative_enabled_${elOrId}`);
+            if (!toggleEl) return;
+            const questionId = toggleEl.dataset ? toggleEl.dataset.questionId : elOrId;
             const dropdown = document.querySelector(`.question-negative-marks[data-question-id="${questionId}"]`);
-            if (!dropdown) return;
-
-            if (value === 'yes') {
-                dropdown.classList.remove('hidden');
+            if (window.NegativeMarks) {
+                window.NegativeMarks.toggleNegativeSelectVisibility(toggleEl, dropdown);
+                if (toggleEl.value === 'yes' && dropdown) {
+                    const marksInput = document.getElementById(`marks_${questionId}`);
+                    const marks = marksInput ? marksInput.value : 1;
+                    window.NegativeMarks.updateNegativeOptionsForSelect(dropdown, marks, dropdown.value);
+                } else if (dropdown) {
+                    dropdown.value = '0';
+                }
             } else {
-                dropdown.classList.add('hidden');
-                dropdown.value = '0';
+                if (!dropdown) return;
+                if (value === 'yes') dropdown.classList.remove('hidden'); else { dropdown.classList.add('hidden'); dropdown.value = '0'; }
             }
         }
 
@@ -331,7 +312,18 @@
                 
                 if (defaultNegativeEnabled === 'yes') {
                     const negativeMarksDropdown = document.querySelector(`.question-negative-marks[data-question-id="${questionId}"]`);
-                    negativeMarksDropdown.value = defaultNegativeMarks;
+                    if (negativeMarksDropdown) {
+                        // Rebuild options according to the (now-updated) marks value and set selected value
+                        if (window.NegativeMarks) {
+                            window.NegativeMarks.updateNegativeOptionsForSelect(negativeMarksDropdown, defaultMarks, defaultNegativeMarks);
+                            // ensure visibility is correct
+                            const toggleEl = select;
+                            window.NegativeMarks.toggleNegativeSelectVisibility(toggleEl, negativeMarksDropdown);
+                        } else {
+                            // fallback: try to set the value (options might not match)
+                            negativeMarksDropdown.value = defaultNegativeMarks;
+                        }
+                    }
                 }
             });
 
@@ -433,21 +425,20 @@
                     form.submit();
                 }
             });
-
-            // Initialize default negative options based on default marks
-            updateDefaultNegativeOptions();
-            // Add event listeners to all marks inputs
-            document.querySelectorAll('.question-marks').forEach(input => {
-                const questionId = input.dataset.questionId;
-                
-                // Initialize negative marks options based on current marks value
-                updateNegativeOptionsForQuestion(questionId);
-                
-                // Add listener for future changes
-                input.addEventListener('input', function() {
+            // Initialize negative marks using shared module (if available)
+            if (window.NegativeMarks && typeof window.NegativeMarks.initNegativeMarksForPage === 'function') {
+                window.NegativeMarks.initNegativeMarksForPage();
+            } else {
+                // Fallback to inline initialization
+                updateDefaultNegativeOptions();
+                document.querySelectorAll('.question-marks').forEach(input => {
+                    const questionId = input.dataset.questionId;
                     updateNegativeOptionsForQuestion(questionId);
+                    input.addEventListener('input', function() {
+                        updateNegativeOptionsForQuestion(questionId);
+                    });
                 });
-            });
+            }
         });
     </script>
 </x-app-layout>

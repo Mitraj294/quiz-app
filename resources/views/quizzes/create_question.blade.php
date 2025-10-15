@@ -225,13 +225,19 @@
             }
             onTypeChange();
 
-            // populate negative options based on marks
-            function initNegative() {
-                const marksInput = document.getElementById('marks');
+            // Initialize negative options via shared module
+            const marksInput = document.getElementById('marks');
+            const sel = document.getElementById('negative_marks');
+            if (window.NegativeMarks) {
+                window.NegativeMarks.updateNegativeOptionsForSelect(sel, marksInput.value, sel ? sel.getAttribute('data-selected') : undefined);
+                marksInput.addEventListener('input', function() {
+                    window.NegativeMarks.updateNegativeOptionsForSelect(sel, marksInput.value);
+                });
+            } else {
+                // fallback to local implementation
                 marksInput.addEventListener('input', updateNegativeOptions);
                 updateNegativeOptions();
             }
-            initNegative();
         });
 
         function updateNegativeOptions() {

@@ -232,13 +232,23 @@
             }
             onTypeChange();
 
-            // populate negative options based on marks
-            function initNegative() {
+            // populate negative options based on marks using shared NegativeMarks
+            (function initNegativeShared() {
                 const marksInput = document.getElementById('marks');
-                marksInput.addEventListener('input', updateNegativeOptions);
-                updateNegativeOptions();
-            }
-            initNegative();
+                const sel = document.getElementById('negative_marks');
+                if (window.NegativeMarks) {
+                    // initialize select
+                    window.NegativeMarks.updateNegativeOptionsForSelect(sel, marksInput.value, sel ? sel.getAttribute('data-selected') : undefined);
+                    // attach listener
+                    marksInput.addEventListener('input', function() {
+                        window.NegativeMarks.updateNegativeOptionsForSelect(sel, marksInput.value);
+                    });
+                } else {
+                    // fallback to local implementation if module isn't loaded
+                    marksInput.addEventListener('input', updateNegativeOptions);
+                    updateNegativeOptions();
+                }
+            })();
 
             // client-side submit validation
             document.querySelector('form').addEventListener('submit', function(e) {
@@ -272,30 +282,6 @@
             });
         });
 
-        function updateNegativeOptions() {
-            const marks = parseFloat(document.getElementById('marks').value) || 0;
-            const sel = document.getElementById('negative_marks');
-            const prev = sel.getAttribute('data-selected') || sel.value || '0';
-            // define fractions to show: 0, 1/4, 1/3, 1/2, full
-            const fractions = [0, 0.25, 1/3, 0.5, 1];
-            sel.innerHTML = '';
-            fractions.forEach(fr => {
-                const val = (fr === 0) ? 0 : (marks * fr);
-                const opt = document.createElement('option');
-                opt.value = String(val);
-                const label = (fr === 0) ? 'No negative marking' : `${formatNumber(fr)} of marks (${formatNumber(val)})`;
-                opt.textContent = label;
-                sel.appendChild(opt);
-            });
-            // try to restore previous selection by matching numeric value
-            const found = Array.from(sel.options).find(o => parseFloat(o.value) === parseFloat(prev));
-            if (found) sel.value = found.value; else sel.selectedIndex = 0;
-        }
-
-        function formatNumber(n) {
-            if (typeof n !== 'number') n = parseFloat(n) || 0;
-            if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
-            return String(Math.round(n * 100) / 100);
-        }
+        // Negative options use the shared NegativeMarks module (updateNegativeOptions is the fallback above)
     </script>
 </x-app-layout>
