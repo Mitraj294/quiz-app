@@ -20,7 +20,7 @@ class MediaController extends Controller
         try {
             $file = $request->file('media');
             $mimeType = $file->getMimeType();
-            
+
             // Determine media type based on MIME type
             $mediaType = 'file';
             if (str_starts_with($mimeType, 'image/')) {
@@ -34,10 +34,10 @@ class MediaController extends Controller
             // Generate unique filename
             $extension = $file->getClientOriginalExtension();
             $filename = Str::random(40) . '.' . $extension;
-            
+
             // Store file in public disk under 'question-media' directory
             $path = $file->storeAs('question-media', $filename, 'public');
-            
+
             // Generate public URL
             $url = Storage::url($path);
 

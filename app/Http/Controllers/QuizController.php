@@ -16,6 +16,8 @@ class QuizController extends Controller
     private const RULE_NULLABLE_INT_MIN0 = 'nullable|integer|min:0';
     private const RULE_NULLABLE_ARRAY = 'nullable|array';
     private const RULE_NULLABLE_NUM_MIN0 = 'nullable|numeric|min:0';
+    private const RULE_NULLABLE_BOOLEAN = 'nullable|boolean';
+    private const TEXT_SHORT_ANSWER = 'fill_the_blank';
 
     public function index()
     {
@@ -90,8 +92,8 @@ class QuizController extends Controller
             'time_between_attempts' => $validated['time_between_attempts'] ?? 0,
         ]);
 
-    // Attach topic (avoid duplicate pivot entries)
-    $quiz->topics()->syncWithoutDetaching([$topicId]);
+        // Attach topic (avoid duplicate pivot entries)
+        $quiz->topics()->syncWithoutDetaching([$topicId]);
 
         return redirect()->route('topics.show', $topicId)
             ->with('success', 'Quiz created successfully!');
@@ -104,13 +106,13 @@ class QuizController extends Controller
             ->where('topicable_id', $quiz->id)
             ->whereIn('topicable_type', ['App\Models\Quiz', 'Harishdurga\LaravelQuiz\Models\Quiz'])
             ->pluck('topic_id');
-        
+
         $topics = \App\Models\Topic::whereIn('id', $topicIds)->get();
         $quiz->setRelation('topics', $topics);
-        
+
         // Load quiz_questions with their related question data and options
         $quiz->load(['questions.question.options']);
-        
+
         return view('quizzes.show', compact('quiz'));
     }
 
@@ -162,10 +164,136 @@ class QuizController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'Text / Short Answer',
+            3 => self::TEXT_SHORT_ANSWER,
         ];
 
         return view('quizzes.create_question', compact('quiz', 'questionTypes'));
+    }
+
+    /**
+     * Show the edit form for a question within the quiz context (allows editing both question and quiz-specific settings)
+     */
+    public function editQuestion(Quiz $quiz, $questionId)
+    {
+        $question = \Harishdurga\LaravelQuiz\Models\Question::with('options', 'question_type')->findOrFail($questionId);
+
+        // Load the quiz-specific pivot data if it exists
+        $quizQuestion = \App\Models\QuizQuestion::where('quiz_id', $quiz->id)->where('question_id', $questionId)->first();
+
+        $questionTypes = [
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
+            3 => self::TEXT_SHORT_ANSWER,
+        ];
+
+        // Map the vendor question_type name to numeric key
+        $typeMap = [
+            'multiple_choice_single_answer' => 1,
+            'multiple_choice_multiple_answer' => 2,
+            'fill_the_blank' => 3,
+        ];
+
+        $currentType = 1;
+        if ($question->relationLoaded('question_type') && $question->question_type) {
+            $currentType = $typeMap[$question->question_type->name] ?? 1;
+        }
+
+        return view('quizzes.edit_question', compact('quiz', 'question', 'quizQuestion', 'questionTypes', 'currentType'));
+    }
+
+    /**
+     * Update a question and its quiz-specific settings
+     */
+    public function updateQuestion(Request $request, Quiz $quiz, $questionId)
+    {
+        $rules = [
+            'question_type' => 'required|in:1,2,3',
+            'question_text' => 'required|string',
+            'options' => 'array',
+            'options.*' => self::RULE_NULLABLE_STRING,
+            'correct' => 'array',
+            'correct.*' => 'nullable|integer',
+            'text_answer' => self::RULE_NULLABLE_STRING,
+            'marks' => self::RULE_NULLABLE_NUM_MIN0,
+            'negative_marks' => self::RULE_NULLABLE_NUM_MIN0,
+            'is_optional' => self::RULE_NULLABLE_BOOLEAN,
+            'media_url' => self::RULE_NULLABLE_STRING,
+            'media_type' => self::RULE_NULLABLE_STRING,
+        ];
+
+        $data = $request->validate($rules);
+
+        $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate(['name' => $this->questionTypeName($data['question_type'])]);
+
+        DB::transaction(function () use ($data, $questionId, $questionTypeModel, $quiz) {
+            $question = \Harishdurga\LaravelQuiz\Models\Question::findOrFail($questionId);
+
+            // Update question fields
+            $question->update([
+                'name' => $data['question_text'],
+                'question_type_id' => $questionTypeModel->id,
+                'media_url' => $data['media_url'] ?? null,
+                'media_type' => $data['media_type'] ?? null,
+            ]);
+
+            // Persist options
+            $this->persistQuestionOptions($questionId, $data['question_type'], $data['options'] ?? [], $data['correct'] ?? [], $data['text_answer'] ?? null);
+
+            // Update or create pivot record in quiz_questions
+            \App\Models\QuizQuestion::updateOrCreate([
+                'quiz_id' => $quiz->id,
+                'question_id' => $questionId,
+            ], [
+                'marks' => $data['marks'] ?? 1,
+                'negative_marks' => $data['negative_marks'] ?? 0,
+                'is_optional' => $data['is_optional'] ?? 0,
+                'order' => 0,
+            ]);
+        });
+
+        Log::info('Quiz-scoped question updated', ['quiz_id' => $quiz->id, 'question_id' => $questionId, 'request' => $data]);
+
+        return redirect()->route('quizzes.show', $quiz->id)
+            ->with('success', 'Question and quiz settings updated successfully');
+    }
+
+    /**
+     * Resolve numeric question_type to the vendor string name
+     */
+    private function questionTypeName(int $type): string
+    {
+        return [
+            1 => 'multiple_choice_single_answer',
+            2 => 'multiple_choice_multiple_answer',
+            3 => self::TEXT_SHORT_ANSWER,
+        ][$type] ?? 'Unknown';
+    }
+
+    /**
+     * Persist question options depending on type (MCQ or text answer)
+     */
+    private function persistQuestionOptions(int $questionId, int $type, array $options = [], array $correct = [], ?string $textAnswer = null): void
+    {
+        // Delete all existing options first
+        \Harishdurga\LaravelQuiz\Models\QuestionOption::where('question_id', $questionId)->delete();
+
+        if (in_array($type, [1, 2])) {
+            foreach ($options as $idx => $opt) {
+                if (! empty($opt)) {
+                    \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
+                        'question_id' => $questionId,
+                        'name' => $opt,
+                        'is_correct' => in_array($idx, $correct),
+                    ]);
+                }
+            }
+        } elseif ($type == 3 && ! empty($textAnswer)) {
+            \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
+                'question_id' => $questionId,
+                'name' => $textAnswer,
+                'is_correct' => true,
+            ]);
+        }
     }
 
     /**
@@ -183,14 +311,14 @@ class QuizController extends Controller
             'text_answer' => self::RULE_NULLABLE_STRING,
             'marks' => self::RULE_NULLABLE_NUM_MIN0,
             'negative_marks' => self::RULE_NULLABLE_NUM_MIN0,
-            'is_optional' => 'nullable|boolean',
+                'is_optional' => self::RULE_NULLABLE_BOOLEAN,
             'media_url' => self::RULE_NULLABLE_STRING,
             'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
         // create the question using vendor model
         $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
-            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => 'Text / Short Answer'][$data['question_type']] ?? 'Unknown'
+            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => self::TEXT_SHORT_ANSWER][$data['question_type']] ?? 'Unknown'
         ]);
 
         $question = \Harishdurga\LaravelQuiz\Models\Question::create([
@@ -210,7 +338,7 @@ class QuizController extends Controller
         }
 
         // Store options
-        if (in_array($data['question_type'], [1,2])) {
+        if (in_array($data['question_type'], [1, 2])) {
             $correct = $data['correct'] ?? [];
             if (! empty($data['options'])) {
                 foreach ($data['options'] as $idx => $opt) {
@@ -255,7 +383,7 @@ class QuizController extends Controller
         Log::info('=== ATTACH QUESTIONS CALLED ===');
         Log::info('Quiz ID: ' . $quiz->id);
         Log::info('Request Data:', $request->all());
-        
+
         try {
             $data = $request->validate([
                 'question_ids' => 'required|array',
@@ -265,9 +393,9 @@ class QuizController extends Controller
                 'negative_marks' => self::RULE_NULLABLE_ARRAY,
                 'negative_marks.*' => self::RULE_NULLABLE_NUM_MIN0,
                 'is_optional' => self::RULE_NULLABLE_ARRAY,
-                'is_optional.*' => 'nullable|boolean',
+                'is_optional.*' => self::RULE_NULLABLE_BOOLEAN,
             ]);
-            
+
             Log::info('Validation passed. Validated data:', $data);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed:', $e->errors());
@@ -275,7 +403,7 @@ class QuizController extends Controller
         }
 
         Log::info('Processing ' . count($data['question_ids']) . ' questions');
-        
+
         // Update or create quiz_question records for each selected question
         foreach ($data['question_ids'] as $questionId) {
             $questionData = [
@@ -284,9 +412,9 @@ class QuizController extends Controller
                 'is_optional' => $data['is_optional'][$questionId] ?? 0,
                 'order' => 0,
             ];
-            
+
             Log::info("Attaching Question ID: $questionId", $questionData);
-            
+
             \App\Models\QuizQuestion::updateOrCreate(
                 [
                     'quiz_id' => $quiz->id,
@@ -294,7 +422,7 @@ class QuizController extends Controller
                 ],
                 $questionData
             );
-            
+
             Log::info("Successfully attached Question ID: $questionId");
         }
 

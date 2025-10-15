@@ -2,9 +2,13 @@
 // Exposes functions on window so inline onchange handlers can call them.
 
 function formatNumber(value) {
-    // Format to 2 decimal places when appropriate but keep common fractions readable
-    if (Number.isInteger(Number(value))) return String(value);
-    return Number(value).toFixed(2).replace(/\.00$/, '');
+    // Convert to number and format:
+    // - If it's an integer (after numeric conversion) show without decimals (e.g. 4)
+    // - Otherwise show two decimals rounded (e.g. 1.3333 -> 1.33, 1.6666 -> 1.67)
+    const n = Number(value);
+    if (Number.isNaN(n)) return String(value);
+    if (Number.isInteger(n)) return String(n);
+    return n.toFixed(2);
 }
 
 function renderNegativeOptions(marks) {
@@ -13,10 +17,10 @@ function renderNegativeOptions(marks) {
     const m = Number(marks) || 1;
     const options = [
         { value: 0, label: 'No negative marking' },
-        { value: +(m * 0.25).toFixed(6), label: `1/4 (${formatNumber((m * 0.25).toFixed(6))})` },
-        { value: +(m * (1/3)).toFixed(6), label: `1/3 (${formatNumber((m * (1/3)).toFixed(6))})` },
-        { value: +(m * 0.5).toFixed(6), label: `1/2 (${formatNumber((m * 0.5).toFixed(6))})` },
-        { value: +(m * 1).toFixed(6), label: `Full (${formatNumber((m * 1).toFixed(6))})` },
+        { value: +(m * 0.25).toFixed(2), label: `1/4 (${formatNumber((m * 0.25).toFixed(2))})` },
+        { value: +(m * (1/3)).toFixed(2), label: `1/3 (${formatNumber((m * (1/3)).toFixed(2))})` },
+        { value: +(m * 0.5).toFixed(2), label: `1/2 (${formatNumber((m * 0.5).toFixed(2))})` },
+        { value: +(m * 1).toFixed(2), label: `Full (${formatNumber((m * 1).toFixed(2))})` },
     ];
     return options;
 }
@@ -28,7 +32,8 @@ function updateNegativeOptionsForSelect(selectEl, marks, selectedValue) {
     selectEl.innerHTML = '';
     opts.forEach(o => {
         const opt = document.createElement('option');
-        opt.value = o.value;
+        // Ensure value is a string so select.value comparisons work predictably
+        opt.value = String(o.value);
         opt.textContent = o.label;
         selectEl.appendChild(opt);
     });
@@ -64,7 +69,8 @@ function initNegativeMarksForPage() {
     document.querySelectorAll('.question-marks').forEach(input => {
         const id = input.dataset.questionId;
         const marksVal = input.value || input.getAttribute('value') || 1;
-        const negSelect = document.getElementById(`negative_marks_${id}`) || document.querySelector(`#negative_marks\[${id}\]`);
+    // Try the id first, otherwise fallback to attribute selector (handles odd IDs)
+    const negSelect = document.getElementById(`negative_marks_${id}`) || document.querySelector(`[data-question-id="${id}"]#negative_marks_${id}`) || document.querySelector(`#negative_marks_${id}`);
         if (negSelect) updateNegativeOptionsForSelect(negSelect, marksVal, negSelect.getAttribute('data-selected'));
         const toggle = document.getElementById(`negative_enabled_${id}`) || document.querySelector(`#negative_enabled_${id}`);
         if (toggle && negSelect) toggleNegativeSelectVisibility(toggle, negSelect);

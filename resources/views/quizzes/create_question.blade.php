@@ -38,7 +38,7 @@
                     <div class="mb-4">
                         <button type="button" id="toggle-media-btn" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             + Add Media
-                        </button>
+                        </button> <p class="text-xs text-gray-500 mt-2">   Attach image, figure, or diagram related to this question.</p>
                     </div>
 
                     <!-- Media Upload Section (hidden by default) -->
@@ -94,7 +94,7 @@
                     </div>
 
                     <div id="text-answer" class="mb-4" style="display:none;">
-                        <label for="text_answer_input" class="block text-sm font-medium mb-2">Answer (for Text / Short Answer)</label>
+                        <label for="text_answer_input" class="block text-sm font-medium mb-2">Answer (for Fill in the Blank)</label>
                         <input type="text" name="text_answer" id="text_answer_input" class="w-full rounded-md border-gray-300">
                     </div>
 
@@ -152,11 +152,7 @@
                 <span class="w-6 text-sm font-medium">${labelForIndex(idx)}</span>
                 <input type="checkbox" name="correct[]" value="${idx}" class="correct-checkbox">
                 <input type="text" name="options[]" class="w-full rounded-md border-gray-300" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
-                <button type="button" class="ml-2 text-red-500 hover:text-red-700 remove-option" onclick="removeOptionField(this)" title="Remove option">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
+                <button type="button" class="ml-2 text-red-500 hover:text-red-700 remove-option" onclick="removeOptionField(this)" title="Remove option">Remove</button>
             `;
             list.appendChild(div);
             refreshOptionIndices();
@@ -202,11 +198,17 @@
 
         function enforceCheckboxMode(tp) {
             const checkboxes = document.querySelectorAll('.correct-checkbox');
+            // remove existing listeners by cloning nodes to avoid duplicate handlers
             checkboxes.forEach(cb => {
                 const clone = cb.cloneNode(true);
                 cb.parentNode.replaceChild(clone, cb);
             });
+
             if (tp == '1') {
+                // Single-answer mode: uncheck all so user must explicitly choose one
+                document.querySelectorAll('.correct-checkbox').forEach(cb => { cb.checked = false; });
+
+                // Make checkboxes behave like radios (only one may be checked)
                 document.querySelectorAll('.correct-checkbox').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked) {

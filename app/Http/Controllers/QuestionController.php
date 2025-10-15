@@ -10,13 +10,16 @@ use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
+    private const TEXT_SHORT_ANSWER = 'fill_the_blank';
+    private const RULE_NULLABLE_STRING = 'nullable|string';
+
     public function create(Topic $topic)
     {
         // Provide the topic and available question types
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'Text / Short Answer'
+            3 => self::TEXT_SHORT_ANSWER
         ];
 
         return view('questions.create', compact('topic', 'questionTypes'));
@@ -28,19 +31,19 @@ class QuestionController extends Controller
             'question_type' => 'required|in:1,2,3',
             'question_text' => 'required|string',
             'options' => 'array',
-            'options.*' => 'nullable|string',
+            'options.*' => self::RULE_NULLABLE_STRING,
             'correct' => 'array',
             'correct.*' => 'nullable|integer',
-            'text_answer' => 'nullable|string',
-            'media_url' => 'nullable|string',
-            'media_type' => 'nullable|string',
+            'text_answer' => self::RULE_NULLABLE_STRING,
+            'media_url' => self::RULE_NULLABLE_STRING,
+            'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
         // Map numeric type to human-friendly name and ensure the question_type exists
         $typeMap = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'Text / Short Answer',
+            3 => self::TEXT_SHORT_ANSWER,
         ];
 
         $typeName = $typeMap[$data['question_type']] ?? 'Unknown';
@@ -52,7 +55,7 @@ class QuestionController extends Controller
         ]);
 
         // Wrap in transaction to ensure atomicity
-    \Illuminate\Support\Facades\DB::transaction(function () use ($data, $topic, $questionTypeModel) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $topic, $questionTypeModel) {
             // Create question using package model (takes advantage of attribute mapping)
             $question = VendorQuestion::create([
                 'name' => $data['question_text'],
@@ -65,7 +68,7 @@ class QuestionController extends Controller
             $topic->questions()->attach($question->id);
 
             // If MCQ types, store options and mark correct ones
-            if (in_array($data['question_type'], [1,2])) {
+            if (in_array($data['question_type'], [1, 2])) {
                 $this->storeMcqOptions($question->id, $data['options'] ?? [], $data['correct'] ?? []);
             }
 
@@ -75,7 +78,7 @@ class QuestionController extends Controller
             }
         });
 
-    return redirect()->route('topics.show', $topic->id)->with('success', 'Question added successfully');
+        return redirect()->route('topics.show', $topic->id)->with('success', 'Question added successfully');
     }
 
     /**
@@ -111,23 +114,28 @@ class QuestionController extends Controller
      */
     public function edit($questionId)
     {
-        $question = VendorQuestion::with(['options', 'questionType'])->findOrFail($questionId);
-        
+        // The vendor model defines the relationship as `question_type()` (snake_case)
+        // so eager-load that relationship. Guard access in case the relation is missing.
+        $question = VendorQuestion::with(['options', 'question_type'])->findOrFail($questionId);
+
         // Map question type to the numeric format expected by the form
         $typeMap = [
             'multiple_choice_single_answer' => 1,
             'multiple_choice_multiple_answer' => 2,
-            'Text / Short Answer' => 3,
+            'fill_the_blank' => 3,
         ];
-        
+
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'Text / Short Answer'
+            3 => self::TEXT_SHORT_ANSWER
         ];
-        
-        $currentType = $typeMap[$question->questionType->name] ?? 1;
-        
+
+        $currentType = 1;
+        if ($question->relationLoaded('question_type') && $question->question_type) {
+            $currentType = $typeMap[$question->question_type->name] ?? 1;
+        }
+
         return view('questions.edit', compact('question', 'questionTypes', 'currentType'));
     }
 
@@ -140,18 +148,18 @@ class QuestionController extends Controller
             'question_type' => 'required|in:1,2,3',
             'question_text' => 'required|string',
             'options' => 'array',
-            'options.*' => 'nullable|string',
+            'options.*' => self::RULE_NULLABLE_STRING,
             'correct' => 'array',
             'correct.*' => 'nullable|integer',
-            'text_answer' => 'nullable|string',
-            'media_url' => 'nullable|string',
-            'media_type' => 'nullable|string',
+            'text_answer' => self::RULE_NULLABLE_STRING,
+            'media_url' => self::RULE_NULLABLE_STRING,
+            'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
         $typeMap = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'Text / Short Answer',
+            3 => self::TEXT_SHORT_ANSWER,
         ];
 
         $typeName = $typeMap[$data['question_type']] ?? 'Unknown';
@@ -161,7 +169,7 @@ class QuestionController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($data, $questionId, $questionTypeModel) {
             $question = VendorQuestion::findOrFail($questionId);
-            
+
             // Update question
             $question->update([
                 'name' => $data['question_text'],
@@ -174,7 +182,7 @@ class QuestionController extends Controller
             VendorOption::where('question_id', $questionId)->delete();
 
             // Re-create options
-            if (in_array($data['question_type'], [1,2])) {
+            if (in_array($data['question_type'], [1, 2])) {
                 $this->storeMcqOptions($questionId, $data['options'] ?? [], $data['correct'] ?? []);
             }
 
@@ -183,6 +191,19 @@ class QuestionController extends Controller
             }
         });
 
+        // Find if this question is attached to any quiz via quiz_questions pivot
+        $quizId = \Illuminate\Support\Facades\DB::table('quiz_questions')
+            ->where('question_id', $questionId)
+            ->value('quiz_id');
+
+        if ($quizId) {
+            // Log and redirect to the quiz's select questions page so admin can continue managing quiz questions
+            \Illuminate\Support\Facades\Log::info('Question updated and linked to quiz, redirecting to select page', ['question_id' => $questionId, 'quiz_id' => $quizId]);
+            return redirect()->route('quizzes.questions.select', $quizId)
+                ->with('success', 'Question updated successfully. Returning to quiz question selection.');
+        }
+
+        \Illuminate\Support\Facades\Log::info('Question updated (no related quiz found)', ['question_id' => $questionId]);
         return redirect()->back()->with('success', 'Question updated successfully');
     }
 
@@ -193,21 +214,21 @@ class QuestionController extends Controller
     {
         \Illuminate\Support\Facades\DB::transaction(function () use ($questionId) {
             $question = VendorQuestion::findOrFail($questionId);
-            
+
             // Delete options first
             VendorOption::where('question_id', $questionId)->delete();
-            
+
             // Delete topicable relationships
             \Illuminate\Support\Facades\DB::table('topicables')
                 ->where('topicable_type', 'LIKE', '%Question%')
                 ->where('topicable_id', $questionId)
                 ->delete();
-            
+
             // Delete quiz_questions relationships
             \Illuminate\Support\Facades\DB::table('quiz_questions')
                 ->where('question_id', $questionId)
                 ->delete();
-            
+
             // Delete the question
             $question->delete();
         });

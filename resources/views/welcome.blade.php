@@ -35,7 +35,7 @@
                                     Log in
                                 </a>
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    <a href="{{ route('register') }}" class="px-4 py-2 text-gray-700 hover:text-gray-900">
                                         Register
                                     </a>
                                 @endif
@@ -60,7 +60,7 @@
                         @guest
                             <!-- Call to Action Buttons -->
                             <div class="flex justify-center gap-4 mb-8">
-                                <a href="{{ route('register') }}" class="px-8 py-3 bg-blue-600 text-gray-600 text-lg font-semibold rounded-lg hover:bg-blue-700 transition">
+                                <a href="{{ route('register') }}"  class="px-8 py-3 bg-gray-200 text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-300 transition">
                                     Get Started - Register Now
                                 </a>
                                 <a href="{{ route('login') }}" class="px-8 py-3 bg-gray-200 text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-300 transition">
@@ -74,12 +74,10 @@
                   
                     @guest
                         <!-- Registration Call-to-Action Section -->
-                        <div class="bg-blue-600 text-gray-600 rounded-lg p-8 text-center">
+                        <div class="bg-white-600 text-gray-600 rounded-lg p-8 text-center">
                             <h3 class="text-2xl font-bold mb-4">Ready to Test Your Knowledge?</h3>
                             <p class="text-lg mb-6">Join thousands of learners improving their skills every day</p>
-                            <a href="{{ route('register') }}" class="inline-block px-8 py-3 bg-white text-blue-600 text-lg font-semibold rounded-lg hover:bg-gray-100 transition">
-                                Register for Free
-                            </a>
+                        
                         </div>
                     @endguest
                 </div>

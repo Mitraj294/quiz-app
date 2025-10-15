@@ -55,6 +55,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/questions/{question}', [\App\Http\Controllers\QuestionController::class, 'destroy'])->name('questions.destroy');
     // Admin: detach question from quiz
     Route::delete('/quizzes/{quiz}/questions/{question}/detach', [\App\Http\Controllers\QuizController::class, 'detachQuestion'])->name('quizzes.questions.detach');
+    // Admin: edit a question within a quiz (edit question and quiz-specific settings)
+    Route::get('/quizzes/{quiz}/questions/{question}/edit', [\App\Http\Controllers\QuizController::class, 'editQuestion'])->name('quizzes.questions.edit');
+    Route::put('/quizzes/{quiz}/questions/{question}', [\App\Http\Controllers\QuizController::class, 'updateQuestion'])->name('quizzes.questions.update');
 });
 
 // Quiz show route - MUST come after /quizzes/create to avoid route conflict

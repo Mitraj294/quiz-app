@@ -42,19 +42,23 @@
                                 </div>
 
                                 <!-- Negative Marks -->
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-start gap-3">
                                     <label for="default_negative_marks_enabled" class="text-sm font-medium w-36">Negative Marking</label>
-                                    <div class="flex-1 flex items-center gap-2">
-                                        <select id="default_negative_marks_enabled"
-                                            class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="toggleDefaultNegativeMarks(this.value)">
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
-                                        </select>
-                                        <select id="default_negative_marks" data-selected="{{ $defaultNegativeMarks ?? 0 }}"
-                                            class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 hidden">
-                                            <!-- populated dynamically -->
-                                        </select>
+                                    <div class="flex-1">
+                                        <div>
+                                            <select id="default_negative_marks_enabled"
+                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                                onchange="toggleDefaultNegativeMarks(this.value)">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-2">
+                                            <select id="default_negative_marks" data-selected="{{ $defaultNegativeMarks ?? 0 }}"
+                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 hidden">
+                                                <!-- populated dynamically -->
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -97,94 +101,112 @@
                                 {{ $isAttached ? 'checked' : '' }}>
                             <div class="flex-1">
                                 <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <label for="q_{{ $question->id }}" class="font-semibold text-xl text-gray-800 cursor-pointer">
-                                            {{ $question->name }}
-                                            @if($isAttached)
-                                            <span class="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded">Already Added</span>
+                                        <div class="flex items-start gap-3">
+                                                  <span class="font-bold text-gray-800 mr-3 text-lg">Q{{ $loop->iteration }}.</span>
+                                        <div class="flex-1">
+                                            <label for="q_{{ $question->id }}" class="font-semibold text-xl text-gray-800 cursor-pointer">
+                                          
+                                                {{ $question->name }}
+                                                @if($isAttached)
+                                                <span class="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded">Already Added</span>
+                                                @endif
+                                            </label>
+                                            @if($question->media_url)
+                                            <div class="my-4 mb-2 mt-2">
+                                                @if($question->media_type === 'image')
+                                                <img src="{{ asset($question->media_url) }}" alt="Question Media" class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                @elseif($question->media_type === 'video')
+                                                <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
+                                                    <source src="{{ asset($question->media_url) }}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                @elseif($question->media_type === 'audio')
+                                                <audio controls class="w-full max-w-md">
+                                                    <source src="{{ asset($question->media_url) }}" type="audio/mpeg">
+                                                    Your browser does not support the audio tag.
+                                                </audio>
+                                                @endif
+                                            </div>
                                             @endif
-                                        </label>
+                                            @if($question->options && $question->options->count() > 0)
+                                            <ul class="mt-2 space-y-2">
+                                                @foreach($question->options as $opt)
+                                                <li class="flex items-center gap-3 text-base text-gray-800">
+                                                    @if($question->options->count() === 1)
+                                                    <span class="w-12 h-8 flex items-center justify-center border rounded {{ $opt->is_correct ? 'bg-green-100 border-green-500 text-green-700 font-semibold' : 'border-gray-300' }} text-lg">Ans</span>
+                                                    @else
+                                                    <span class="w-8 h-8 flex items-center justify-center border rounded {{ $opt->is_correct ? 'bg-green-100 border-green-500 text-green-700 font-semibold' : 'border-gray-300' }} text-lg">{{ chr(65 + $loop->index) }}</span>
+                                                    @endif
 
-                                        @if($question->media_url)
-                                        <div class="my-4 mb-2 mt-2">
-                                            @if($question->media_type === 'image')
-                                            <img src="{{ asset($question->media_url) }}" alt="Question Media" class="max-w-md rounded-lg shadow-md border border-gray-200">
-                                            @elseif($question->media_type === 'video')
-                                            <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
-                                                <source src="{{ asset($question->media_url) }}" type="video/mp4">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                            @elseif($question->media_type === 'audio')
-                                            <audio controls class="w-full max-w-md">
-                                                <source src="{{ asset($question->media_url) }}" type="audio/mpeg">
-                                                Your browser does not support the audio tag.
-                                            </audio>
+                                                    <span class="text-lg ml-2">{{ $opt->name }}</span>
+                                                </li>
+                                                @endforeach
+                                            </ul>
                                             @endif
                                         </div>
-                                        @endif
-                                        @if($question->options && $question->options->count() > 0)
-                                        <ul class="list-disc list-inside text-lg font-semibold text-gray-500 mt-2">
-                                            @foreach($question->options as $opt)
-                                            <li>{{ $opt->name }}</li>
-                                            @endforeach
-                                        </ul>
-                                        @endif
+
+
+                                       
                                     </div>
+                                     <!-- Individual Question Settings (Right Side) -->
+                                        <div class="p-3" style="width: 260px;">
+                                            <h4 class="text-sm font-semibold mb-3 text-indigo-900">Question Settings</h4>
+                                            <div class="space-y-3">
+                                                <!-- Marks -->
+                                                <div class="flex flex-col gap-1">
+                                                    <label for="marks_{{ $question->id }}" class="text-sm font-medium w-36">Marks</label>
+                                                    <input type="number"
+                                                        id="marks_{{ $question->id }}"
+                                                        name="marks[{{ $question->id }}]"
+                                                        value="{{ $defaultMarks }}"
+                                                        step="0.01"
+                                                        class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-marks text-sm py-2 h-9"
+                                                        data-question-id="{{ $question->id }}">
+                                                </div>
 
-                                    <!-- Individual Question Settings (Right Side) -->
-                                    <div class="p-3" style="width: 260px;">
-                                        <h4 class="text-sm font-semibold mb-3 text-indigo-900">Question Settings</h4>
-                                        <div class="space-y-3">
-                                            <!-- Marks -->
-                                            <div class="flex flex-col gap-1">
-                                                <label for="marks_{{ $question->id }}" class="text-sm font-medium w-36">Marks</label>
-                                                <input type="number"
-                                                    id="marks_{{ $question->id }}"
-                                                    name="marks[{{ $question->id }}]"
-                                                    value="{{ $defaultMarks }}"
-                                                    step="0.01"
-                                                    class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-marks text-sm py-2 h-9"
-                                                    data-question-id="{{ $question->id }}">
-                                            </div>
+                                                <!-- Negative Marks -->
+                                                <div class="flex flex-col gap-1">
+                                                    <label for="negative_enabled_{{ $question->id }}" class="text-sm font-medium w-36">Negative Marking</label>
+                                                    <div class="flex flex-col flex-1 gap-2">
+                                                                <div>
+                                                                    <select id="negative_enabled_{{ $question->id }}"
+                                                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-negative-enabled text-sm py-2 h-9"
+                                                                        data-question-id="{{ $question->id }}"
+                                                                        onchange="toggleQuestionNegativeMarks(this, this.value)">
+                                                                        <option value="no" {{ !$hasNegativeMarks ? 'selected' : '' }}>No</option>
+                                                                        <option value="yes" {{ $hasNegativeMarks ? 'selected' : '' }}>Yes</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="mt-2">
+                                                                    <select id="negative_marks_{{ $question->id }}"
+                                                                        name="negative_marks[{{ $question->id }}]"
+                                                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm py-2 h-9"
+                                                                        data-question-id="{{ $question->id }}" data-selected="{{ $defaultNegativeMarks }}">
+                                                                        <!-- populated dynamically based on marks -->
+                                                                    </select>
+                                                                </div>
+                                                    </div>
+                                                </div>
 
-                                            <!-- Negative Marks -->
-                                            <div class="flex flex-col gap-1">
-                                                <label for="negative_enabled_{{ $question->id }}" class="text-sm font-medium w-36">Negative Marking</label>
-                                                <div class="flex flex-col flex-1 gap-2">
-                                                    <select id="negative_enabled_{{ $question->id }}"
-                                                        class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-negative-enabled text-sm py-2 h-9"
-                                                        data-question-id="{{ $question->id }}"
-                                                        onchange="toggleQuestionNegativeMarks(this, this.value)">
-                                                        <option value="no" {{ !$hasNegativeMarks ? 'selected' : '' }}>No</option>
-                                                        <option value="yes" {{ $hasNegativeMarks ? 'selected' : '' }}>Yes</option>
-                                                    </select>
-                                                    <select id="negative_marks_{{ $question->id }}"
-                                                        name="negative_marks[{{ $question->id }}]"
-                                                        class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm py-2 h-9"
-                                                        data-question-id="{{ $question->id }}" data-selected="{{ $defaultNegativeMarks }}">
-                                                        <!-- populated dynamically based on marks -->
+                                                <!-- Is Optional -->
+                                                <div class="flex flex-col gap-1">
+                                                    <label for="is_optional_{{ $question->id }}" class="text-sm font-medium w-36">Is Optional</label>
+                                                    <select id="is_optional_{{ $question->id }}"
+                                                        name="is_optional[{{ $question->id }}]"
+                                                        class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-optional text-sm py-2 h-9"
+                                                        data-question-id="{{ $question->id }}">
+                                                        <option value="0" {{ $defaultIsOptional == 0 ? 'selected' : '' }}>No</option>
+                                                        <option value="1" {{ $defaultIsOptional == 1 ? 'selected' : '' }}>Yes</option>
                                                     </select>
                                                 </div>
                                             </div>
-
-                                            <!-- Is Optional -->
-                                            <div class="flex flex-col gap-1">
-                                                <label for="is_optional_{{ $question->id }}" class="text-sm font-medium w-36">Is Optional</label>
-                                                <select id="is_optional_{{ $question->id }}"
-                                                    name="is_optional[{{ $question->id }}]"
-                                                    class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-optional text-sm py-2 h-9"
-                                                    data-question-id="{{ $question->id }}">
-                                                    <option value="0" {{ $defaultIsOptional == 0 ? 'selected' : '' }}>No</option>
-                                                    <option value="1" {{ $defaultIsOptional == 1 ? 'selected' : '' }}>Yes</option>
-                                                </select>
-                                            </div>
                                         </div>
-                                    </div>
                                 </div>
 
                                 <!-- Edit and Delete Actions -->
                                 <div class="mt-3 flex gap-2">
-                                    <a href="{{ route('questions.edit', $question->id) }}"
+                                    <a href="{{ route('quizzes.questions.edit', ['quiz' => $quiz->id, 'question' => $question->id]) }}"
+                                   
                                         class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                                         Edit
                                     </a>
@@ -262,7 +284,7 @@
             if (window.NegativeMarks) {
                 window.NegativeMarks.updateNegativeOptionsForSelect(dropdown, marks, current);
             } else {
-                // fallback behaviour (should not be needed when bundled)
+
                 dropdown.innerHTML = '';
                 const options = [{
                         value: 0,
