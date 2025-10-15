@@ -18,7 +18,7 @@
         <div class="min-h-screen">
             <!-- Header -->
             <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div class="max-w-ful mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
                     <div class="shrink-0 flex items-center">
                         <a href="{{ url('/dashboard') }}">
                             <img src="/favicon.svg" alt="Quiz app" class="block h-9 w-auto">
@@ -47,7 +47,7 @@
 
             <!-- Main Content -->
             <main>
-                <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+                <div class="max-w-ful mx-auto px-4 py-12 sm:px-6 lg:px-8">
                     <!-- Hero Section -->
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900 mb-4">

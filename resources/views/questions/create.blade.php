@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-ful mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
 
                 @if($errors->any())
@@ -35,8 +35,7 @@
                     </div>
                     <!-- Toggle Button -->
                     <div class="mb-4">
-                        <button type="button" id="toggle-media-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-black
-                         uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <button type="button" id="toggle-media-btn" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition ease-in-out duration-150">
                             + Add Media
                         </button>
                     </div>
@@ -77,7 +76,7 @@
                         </div>
                         <div id="upload-progress" class="mt-2 hidden">
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                <div id="progress-bar" class="bg-black-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
@@ -88,7 +87,7 @@
                             <!-- Option rows will be inserted here -->
                         </div>
                         <div class="mt-2">
-                            <button type="button" onclick="addOptionField()" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">+ Add option</button>
+                            <button type="button" onclick="addOptionField()" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition ease-in-out duration-150">+ Add option</button>
                         </div>
                         <p class="text-xs text-gray-500 mt-2">Mark the correct option(s) using the checkbox. For Single Answer type only one may be selected.</p>
                     </div>
@@ -99,7 +98,7 @@
                     </div>
 
                     <div class="flex gap-4">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">Add Question</button>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition ease-in-out duration-150">Add Question</button>
                         <a href="{{ route('topics.show', $topic->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
                     </div>
                 </form>
@@ -118,13 +117,13 @@
                     if (mediaSection.classList.contains('hidden')) {
                         mediaSection.classList.remove('hidden');
                         mediaBtn.textContent = '- Hide Media';
-                        mediaBtn.classList.remove('bg-indigo-600');
+                        mediaBtn.classList.remove('bg-black-600');
                         mediaBtn.classList.add('bg-gray-600');
                     } else {
                         mediaSection.classList.add('hidden');
                         mediaBtn.textContent = '+ Add Media';
                         mediaBtn.classList.remove('bg-gray-600');
-                        mediaBtn.classList.add('bg-indigo-600');
+                        mediaBtn.classList.add('bg-black-600');
                     }
                 });
             }

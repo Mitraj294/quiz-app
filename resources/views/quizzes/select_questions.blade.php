@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <!-- Success Message -->
             @if(session('success'))
                 <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -37,7 +37,7 @@
                                 <div class="flex items-center gap-3">
                                     <label for="default_marks" class="text-sm font-medium w-36">Marks</label>
                                     <input type="number" id="default_marks" step="0.01" value="1" 
-                                           class="w-36 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                          onchange="applyToAll('marks', this.value); updateDefaultNegativeOptions();">
                                 </div>
                                 
@@ -51,13 +51,9 @@
                                             <option value="no">No</option>
                                             <option value="yes">Yes</option>
                                         </select>
-                                        <select id="default_negative_marks" 
+                                        <select id="default_negative_marks" data-selected="{{ $defaultNegativeMarks }}"
                                                 class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 hidden">
-                                            <option value="0">No negative marking</option>
-                                            <option value="0.25">1/4 (0.25)</option>
-                                            <option value="0.33">1/3 (0.33)</option>
-                                            <option value="0.5">1/2 (0.5)</option>
-                                            <option value="1">Full (1)</option>
+                                            <!-- populated dynamically -->
                                         </select>
                                     </div>
                                 </div>
@@ -97,7 +93,7 @@
                                 $defaultIsOptional = $attachedData ? $attachedData->is_optional : 0;
                                 $hasNegativeMarks = $defaultNegativeMarks > 0;
                             @endphp
-                            <div class="p-4 border rounded flex items-start gap-4 {{ $isAttached ? 'bg-green-50 border-green-300' : '' }}" id="question-{{ $question->id }}">
+                            <div class="p-4 border rounded flex items-start gap-4 {{ $isAttached ? ' border-black-500' : '' }}" id="question-{{ $question->id }}">
                                 <input type="checkbox" name="question_ids[]" value="{{ $question->id }}" 
                                        id="q_{{ $question->id }}" class="mt-1 question-checkbox"
                                        {{ $isAttached ? 'checked' : '' }}>
@@ -166,12 +162,8 @@
                                                     <select id="negative_marks_{{ $question->id }}"
                                                             name="negative_marks[{{ $question->id }}]" 
                                                             class="w-full text-sm rounded border-gray-300 {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks"
-                                                            data-question-id="{{ $question->id }}">
-                                                        <option value="0" {{ $defaultNegativeMarks == 0 ? 'selected' : '' }}>No negative marking</option>
-                                                        <option value="0.25" {{ $defaultNegativeMarks == 0.25 ? 'selected' : '' }}>1/4 (0.25)</option>
-                                                        <option value="0.33" {{ $defaultNegativeMarks == 0.33 ? 'selected' : '' }}>1/3 (0.33)</option>
-                                                        <option value="0.5" {{ $defaultNegativeMarks == 0.5 ? 'selected' : '' }}>1/2 (0.5)</option>
-                                                        <option value="1" {{ $defaultNegativeMarks == 1 ? 'selected' : '' }}>Full (1)</option>
+                                                            data-question-id="{{ $question->id }}" data-selected="{{ $defaultNegativeMarks }}">
+                                                        <!-- populated dynamically based on marks -->
                                                     </select>
                                                 </div>
                                                 
@@ -226,10 +218,27 @@
             const negativeSelect = document.getElementById(`negative_marks_${questionId}`);
             if (!marksInput || !negativeSelect) return;
             const marks = parseFloat(marksInput.value) || 1;
-            const currentValue = negativeSelect.value;
+            const currentValue = negativeSelect.value || negativeSelect.getAttribute('data-selected') || '0';
             if (window.NegativeMarks) {
                 window.NegativeMarks.updateNegativeOptionsForSelect(negativeSelect, marks, currentValue);
+                return;
             }
+
+            // Fallback: build options locally based on marks
+            const fractions = [0, 0.25, 1/3, 0.5, 1];
+            negativeSelect.innerHTML = '';
+            fractions.forEach(fr => {
+                const val = (fr === 0) ? 0 : +(marks * fr).toFixed(6);
+                const opt = document.createElement('option');
+                opt.value = String(val);
+                const label = (fr === 0) ? 'No negative marking' : `${(fr === 1/3) ? '1/3' : `1/${Math.round(1/fr)}`} (${(fr === 1/3) ? (marks/3).toFixed(2) : (marks*fr).toFixed(2)})`;
+                opt.textContent = label;
+                negativeSelect.appendChild(opt);
+            });
+
+            // try to restore previous selection by numeric match
+            const found = Array.from(negativeSelect.options).find(o => parseFloat(o.value) === parseFloat(currentValue));
+            if (found) negativeSelect.value = found.value; else negativeSelect.selectedIndex = 0;
         }
 
         function toggleDefaultNegativeMarks(value) {

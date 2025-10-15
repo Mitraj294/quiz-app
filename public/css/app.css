@@ -1129,7 +1129,7 @@ select {
 }
 
 .max-w-7xl {
-  max-width: 80rem;
+  max-width: 100;
 }
 
 .max-w-full {
