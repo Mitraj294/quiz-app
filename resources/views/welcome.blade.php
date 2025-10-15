@@ -11,15 +11,19 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     </head>
     <body class="bg-gray-100">
         <div class="min-h-screen">
             <!-- Header -->
             <header class="bg-white shadow">
                 <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-                    <h1 class="text-3xl font-bold text-gray-900">
-                        {{ config('app.name', 'Quiz App') }}
-                    </h1>
+                    <div class="shrink-0 flex items-center">
+                        <a href="{{ url('/dashboard') }}">
+                            <img src="/favicon.svg" alt="Quiz app" class="block h-9 w-auto">
+                        </a>
+                    </div>
                     @if (Route::has('login'))
                         <nav class="flex space-x-4">
                             @auth
@@ -56,7 +60,7 @@
                         @guest
                             <!-- Call to Action Buttons -->
                             <div class="flex justify-center gap-4 mb-8">
-                                <a href="{{ route('register') }}" class="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition">
+                                <a href="{{ route('register') }}" class="px-8 py-3 bg-blue-600 text-gray-600 text-lg font-semibold rounded-lg hover:bg-blue-700 transition">
                                     Get Started - Register Now
                                 </a>
                                 <a href="{{ route('login') }}" class="px-8 py-3 bg-gray-200 text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-300 transition">
@@ -70,7 +74,7 @@
                   
                     @guest
                         <!-- Registration Call-to-Action Section -->
-                        <div class="bg-blue-600 text-white rounded-lg p-8 text-center">
+                        <div class="bg-blue-600 text-gray-600 rounded-lg p-8 text-center">
                             <h3 class="text-2xl font-bold mb-4">Ready to Test Your Knowledge?</h3>
                             <p class="text-lg mb-6">Join thousands of learners improving their skills every day</p>
                             <a href="{{ route('register') }}" class="inline-block px-8 py-3 bg-white text-blue-600 text-lg font-semibold rounded-lg hover:bg-gray-100 transition">

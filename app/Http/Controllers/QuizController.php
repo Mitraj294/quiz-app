@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Quiz;
 use App\Models\Topic;
 use Illuminate\Support\Str;
@@ -251,31 +252,50 @@ class QuizController extends Controller
      */
     public function attachQuestions(Request $request, Quiz $quiz)
     {
-        $data = $request->validate([
-            'question_ids' => 'required|array',
-            'question_ids.*' => 'integer|exists:questions,id',
-            'marks' => self::RULE_NULLABLE_ARRAY,
-            'marks.*' => self::RULE_NULLABLE_NUM_MIN0,
-            'negative_marks' => self::RULE_NULLABLE_ARRAY,
-            'negative_marks.*' => self::RULE_NULLABLE_NUM_MIN0,
-            'is_optional' => self::RULE_NULLABLE_ARRAY,
-            'is_optional.*' => 'nullable|boolean',
-        ]);
+        Log::info('=== ATTACH QUESTIONS CALLED ===');
+        Log::info('Quiz ID: ' . $quiz->id);
+        Log::info('Request Data:', $request->all());
+        
+        try {
+            $data = $request->validate([
+                'question_ids' => 'required|array',
+                'question_ids.*' => 'integer|exists:questions,id',
+                'marks' => self::RULE_NULLABLE_ARRAY,
+                'marks.*' => self::RULE_NULLABLE_NUM_MIN0,
+                'negative_marks' => self::RULE_NULLABLE_ARRAY,
+                'negative_marks.*' => self::RULE_NULLABLE_NUM_MIN0,
+                'is_optional' => self::RULE_NULLABLE_ARRAY,
+                'is_optional.*' => 'nullable|boolean',
+            ]);
+            
+            Log::info('Validation passed. Validated data:', $data);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed:', $e->errors());
+            throw $e;
+        }
 
+        Log::info('Processing ' . count($data['question_ids']) . ' questions');
+        
         // Update or create quiz_question records for each selected question
         foreach ($data['question_ids'] as $questionId) {
+            $questionData = [
+                'marks' => $data['marks'][$questionId] ?? 1,
+                'negative_marks' => $data['negative_marks'][$questionId] ?? 0,
+                'is_optional' => $data['is_optional'][$questionId] ?? 0,
+                'order' => 0,
+            ];
+            
+            Log::info("Attaching Question ID: $questionId", $questionData);
+            
             \App\Models\QuizQuestion::updateOrCreate(
                 [
                     'quiz_id' => $quiz->id,
                     'question_id' => $questionId,
                 ],
-                [
-                    'marks' => $data['marks'][$questionId] ?? 1,
-                    'negative_marks' => $data['negative_marks'][$questionId] ?? 0,
-                    'is_optional' => $data['is_optional'][$questionId] ?? 0,
-                    'order' => 0,
-                ]
+                $questionData
             );
+            
+            Log::info("Successfully attached Question ID: $questionId");
         }
 
         return redirect()->route('quizzes.show', $quiz->id)

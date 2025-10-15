@@ -26,7 +26,7 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <form method="POST" action="{{ route('quizzes.questions.attach', $quiz->id) }}" id="attach-questions-form">
+                <form method="POST" action="{{ route('quizzes.questions.attach', $quiz->id) }}" id="attach-questions-form" onsubmit="console.log('Form is submitting to:', this.action);">
                     @csrf
                     
                     <!-- Global Settings for All Questions -->
@@ -38,7 +38,7 @@
                                     <label for="default_marks" class="text-sm font-medium w-36">Marks</label>
                                     <input type="number" id="default_marks" step="0.01" value="1" 
                                            class="w-36 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                           onchange="applyToAll('marks', this.value)">
+                         onchange="applyToAll('marks', this.value); updateDefaultNegativeOptions();">
                                 </div>
                                 
                                 <!-- Negative Marks -->
@@ -53,6 +53,7 @@
                                         </select>
                                         <select id="default_negative_marks" 
                                                 class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 hidden">
+                                            <option value="0">No negative marking</option>
                                             <option value="0.25">1/4 (0.25)</option>
                                             <option value="0.33">1/3 (0.33)</option>
                                             <option value="0.5">1/2 (0.5)</option>
@@ -195,17 +196,11 @@
                                            class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                                             Edit
                                         </a>
-                                        <form action="{{ route('questions.destroy', $question->id) }}" 
-                                              method="POST" 
-                                              onsubmit="return confirm('Permanently delete this question? This cannot be undone!')"
-                                              class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition">
-                                                Delete
-                                            </button>
-                                        </form>
+                                        <button type="button" 
+                                                class="delete-question-btn px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                data-question-id="{{ $question->id }}">
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -272,6 +267,35 @@
             }
         }
 
+        // Update default negative marks options based on default marks value
+        function updateDefaultNegativeOptions() {
+            const marksInput = document.getElementById('default_marks');
+            const dropdown = document.getElementById('default_negative_marks');
+            if (!marksInput || !dropdown) return;
+
+            const marks = parseFloat(marksInput.value) || 1;
+            const current = dropdown.value;
+
+            const options = [
+                { value: 0, label: 'No negative marking' },
+                { value: +(marks / 4).toFixed(2), label: `1/4 (${(marks / 4).toFixed(2)})` },
+                { value: +(marks / 3).toFixed(2), label: `1/3 (${(marks / 3).toFixed(2)})` },
+                { value: +(marks / 2).toFixed(2), label: `1/2 (${(marks / 2).toFixed(2)})` },
+                { value: +marks.toFixed(2), label: `Full (${marks.toFixed(2)})` },
+            ];
+
+            dropdown.innerHTML = '';
+            options.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = String(opt.value);
+                o.textContent = opt.label;
+                dropdown.appendChild(o);
+            });
+
+            // try to restore previous selection if applicable
+            if (current) dropdown.value = current;
+        }
+
         // Toggle individual question negative marks
         // Accept either the element (from onchange: this) or a questionId (when called programmatically)
         function toggleQuestionNegativeMarks(elOrId, value) {
@@ -325,6 +349,8 @@
                 document.querySelectorAll('.question-marks').forEach(input => {
                     input.value = value;
                 });
+                    // Also update default negative options when marks change
+                    updateDefaultNegativeOptions();
             } else if (field === 'is_optional') {
                 document.querySelectorAll('.question-optional').forEach(select => {
                     select.value = value;
@@ -344,18 +370,72 @@
 
         // Validate form before submission
         function validateForm() {
+            console.log('=== VALIDATE FORM CALLED ===');
             const checkedBoxes = document.querySelectorAll('.question-checkbox:checked');
+            console.log('Checked boxes count:', checkedBoxes.length);
             
             if (checkedBoxes.length === 0) {
+                console.log('No questions selected!');
                 alert('Please select at least one question to attach!');
                 return false;
             }
             
+            // Log form data being submitted
+            const formData = new FormData(document.getElementById('attach-questions-form'));
+            console.log('Form data being submitted:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
+            }
+            
+            console.log('Validation passed, submitting form...');
             return true;
         }
 
         // Initialize dynamic negative marks on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle delete button clicks with event delegation
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-question-btn') || e.target.closest('.delete-question-btn')) {
+                    const btn = e.target.classList.contains('delete-question-btn') ? e.target : e.target.closest('.delete-question-btn');
+                    const questionId = btn.dataset.questionId;
+                    
+                    console.log('Delete question called for ID:', questionId);
+                    
+                    if (!confirm('Permanently delete this question? This cannot be undone!')) {
+                        console.log('Delete cancelled by user');
+                        return;
+                    }
+                    
+                    // Create a temporary form
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/questions/${questionId}`;
+                    
+                    // Add CSRF token
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                                   || document.querySelector('input[name="_token"]')?.value;
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                    
+                    // Add DELETE method
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+                    
+                    // Append to body and submit
+                    document.body.appendChild(form);
+                    console.log('Submitting delete form for question:', questionId);
+                    form.submit();
+                }
+            });
+
+            // Initialize default negative options based on default marks
+            updateDefaultNegativeOptions();
             // Add event listeners to all marks inputs
             document.querySelectorAll('.question-marks').forEach(input => {
                 const questionId = input.dataset.questionId;
