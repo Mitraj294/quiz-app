@@ -38,13 +38,10 @@ class AttemptController extends Controller
             }
         }
 
-        // Prefer `quizzes.take` view if present (useful when view was renamed),
-        // otherwise fallback to `quizzes.attempt` for backward compatibility.
-        if (view()->exists('quizzes.take')) {
-            return view('quizzes.take', compact('quiz'));
-        }
+        // Prefer `quizzes.take` view if present; otherwise fallback to `quizzes.attempt`.
+        $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
 
-        return view('quizzes.attempt', compact('quiz'));
+        return view($viewName, compact('quiz'));
     }
 
     /**
