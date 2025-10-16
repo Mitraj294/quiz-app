@@ -52,11 +52,23 @@
                         </div>
                         <div>
                             <label for="valid_from" class="block text-sm font-medium mb-2">Valid From</label>
-                            <input type="datetime-local" id="valid_from" name="valid_from" value="{{ old('valid_from', optional($quiz->valid_from)->format('Y-m-d\TH:i') ) }}" class="w-full rounded-md border-gray-300">
+                            @php
+                                $vf = old('valid_from');
+                                if (! $vf && $quiz->valid_from) {
+                                    $vf = \Carbon\Carbon::parse($quiz->valid_from)->format('Y-m-d\TH:i');
+                                }
+                            @endphp
+                            <input type="datetime-local" id="valid_from" name="valid_from" value="{{ $vf }}" class="w-full rounded-md border-gray-300">
                         </div>
                         <div>
                             <label for="valid_upto" class="block text-sm font-medium mb-2">Valid Upto</label>
-                            <input type="datetime-local" id="valid_upto" name="valid_upto" value="{{ old('valid_upto', optional($quiz->valid_upto)->format('Y-m-d\TH:i') ) }}" class="w-full rounded-md border-gray-300">
+                            @php
+                                $vu = old('valid_upto');
+                                if (! $vu && $quiz->valid_upto) {
+                                    $vu = \Carbon\Carbon::parse($quiz->valid_upto)->format('Y-m-d\TH:i');
+                                }
+                            @endphp
+                            <input type="datetime-local" id="valid_upto" name="valid_upto" value="{{ $vu }}" class="w-full rounded-md border-gray-300">
                         </div>
                     </div>
 

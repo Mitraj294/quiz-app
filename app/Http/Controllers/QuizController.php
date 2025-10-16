@@ -9,6 +9,12 @@ use App\Models\Quiz;
 use App\Models\Topic;
 use Illuminate\Support\Str;
 
+/**
+ * QuizController
+ *
+ * Note: this application stores `duration` and `time_between_attempts` in minutes.
+ * The UI expects and displays values in minutes and the controller persists them as minutes.
+ */
 class QuizController extends Controller
 {
     // Reusable validation rule fragments to avoid duplicated literals
@@ -125,7 +131,7 @@ class QuizController extends Controller
             $topicId = $validated['topic_id'];
         }
 
-        // Create quiz
+        // Create quiz (store duration and time_between_attempts as minutes)
         $quiz = Quiz::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),

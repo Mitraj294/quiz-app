@@ -81,7 +81,7 @@
                             </div>
 
                             <!-- Step 1 actions -->
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-4 mt-4">
                                 <a href="{{ route('topics.index') }}" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</a>
                                 <button type="button" id="btn-next" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                          onclick="nextStep()">Next</button>
@@ -142,14 +142,14 @@
                                         <input type="number" id="max_attempts" name="max_attempts" value="{{ old('max_attempts', 0) }}" class="w-full rounded-md border-gray-300">
                                     </div>
                                     <div>
-                                        <label for="time_between_attempts" class="block text-sm font-medium mb-2">Time Between Attempts (seconds)</label>
+                                        <label for="time_between_attempts" class="block text-sm font-medium mb-2">Time Between Attempts (minutes)</label>
                                         <input type="number" id="time_between_attempts" name="time_between_attempts" value="{{ old('time_between_attempts', 0) }}" class="w-full rounded-md border-gray-300">
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4 mt-4">
                                     <div>
-                                        <label for="duration" class="block text-sm font-medium mb-2">Duration (seconds)</label>
+                                        <label for="duration" class="block text-sm font-medium mb-2">Duration (minutes)</label>
                                         <input type="number" id="duration" name="duration" value="{{ old('duration', 0) }}" class="w-full rounded-md border-gray-300">
                                     </div>
                                     <div>
@@ -175,17 +175,6 @@
                                 <div class="mt-4">
                                     <label for="negative_marking_settings" class="block text-sm font-medium mb-2">Negative Marking Settings</label>
                                     <textarea name="negative_marking_settings" id="negative_marking_settings" rows="3" class="w-full rounded-md border-gray-300">{{ old('negative_marking_settings') }}</textarea>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <label for="media_url" class="block text-sm font-medium mb-2">Media URL</label>
-                                        <input type="text" name="media_url" id="media_url" value="{{ old('media_url') }}" class="w-full rounded-md border-gray-300">
-                                    </div>
-                                    <div>
-                                        <label for="media_type" class="block text-sm font-medium mb-2">Media Type</label>
-                                        <input type="text" name="media_type" id="media_type" value="{{ old('media_type') }}" class="w-full rounded-md border-gray-300" placeholder="image,video,audio">
-                                    </div>
                                 </div>
 
                             

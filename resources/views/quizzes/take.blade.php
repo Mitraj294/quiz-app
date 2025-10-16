@@ -9,9 +9,13 @@
         <div class="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Quiz Info Card -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-xl font-bold mb-4">{{ $quiz->name }}</h3>
-                <p class="text-gray-700 mb-4">{{ $quiz->description }}</p>
-
+                <div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">{{ $quiz->name }}</h3>
+                        <p class="text-gray-700 mb-4">{{ $quiz->description }}</p>
+                    </div>
+                    <div></div>
+                </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     <div>
                         <span class="text-sm text-gray-600">Total Marks</span>
@@ -27,7 +31,7 @@
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Duration</span>
-                        <p class="text-lg font-semibold">{{ $quiz->duration > 0 ? $quiz->duration . ' sec' : 'No limit' }}</p>
+                        <p class="text-lg font-semibold">{{ $quiz->duration > 0 ? $quiz->duration . ' min' : 'No limit' }}</p>
                     </div>
                 </div>
 
@@ -75,45 +79,43 @@
                                             @endif
 
                                             @if($quizQuestion->question->question_type->name === 'fill_the_blank')
-                                                <!-- Fill in the Blank Answer -->
-                                                <div class="mt-4">
-                                                    <label for="answer_{{ $quizQuestion->question->id }}" class="block text-sm font-medium text-gray-700 mb-2">Your Answer:</label>
-                                                    <input 
-                                                        type="text" 
-                                                        id="answer_{{ $quizQuestion->question->id }}" 
-                                                        name="answers[{{ $quizQuestion->question->id }}]" 
-                                                        class="w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                        placeholder="Type your answer here"
-                                                        {{ $quizQuestion->is_optional ? '' : 'required' }}
-                                                    >
-                                                </div>
+                                            <!-- Fill in the Blank Answer -->
+                                            <div class="mt-4">
+                                                <label for="answer_{{ $quizQuestion->question->id }}" class="block text-sm font-medium text-gray-700 mb-2">Your Answer:</label>
+                                                <input
+                                                    type="text"
+                                                    id="answer_{{ $quizQuestion->question->id }}"
+                                                    name="answers[{{ $quizQuestion->question->id }}]"
+                                                    class="w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    placeholder="Type your answer here"
+                                                    {{ $quizQuestion->is_optional ? '' : 'required' }}>
+                                            </div>
                                             @else
-                                                <!-- MCQ Options -->
-                                                <div class="mt-4 space-y-3">
-                                                    @php
-                                                        $isSingleAnswer = $quizQuestion->question->question_type->name === 'multiple_choice_single_answer';
-                                                        $inputType = $isSingleAnswer ? 'radio' : 'checkbox';
-                                                        $inputName = $isSingleAnswer 
-                                                            ? "answers[{$quizQuestion->question->id}]" 
-                                                            : "answers[{$quizQuestion->question->id}][]";
-                                                    @endphp
+                                            <!-- MCQ Options -->
+                                            <div class="mt-4 space-y-3">
+                                                @php
+                                                $isSingleAnswer = $quizQuestion->question->question_type->name === 'multiple_choice_single_answer';
+                                                $inputType = $isSingleAnswer ? 'radio' : 'checkbox';
+                                                $inputName = $isSingleAnswer
+                                                ? "answers[{$quizQuestion->question->id}]"
+                                                : "answers[{$quizQuestion->question->id}][]";
+                                                @endphp
 
-                                                    @foreach($quizQuestion->question->options as $option)
-                                                    <label class="flex items-center gap-3 p-3 border rounded-lg hover:bg-white transition cursor-pointer">
-                                                        <input 
-                                                            type="{{ $inputType }}" 
-                                                            name="{{ $inputName }}" 
-                                                            value="{{ $option->id }}"
-                                                            class="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
-                                                            {{ !$isSingleAnswer && !$quizQuestion->is_optional ? '' : '' }}
-                                                        >
-                                                        <span class="w-8 h-8 flex items-center justify-center border rounded border-gray-300 text-base font-medium">
-                                                            {{ chr(65 + $loop->index) }}
-                                                        </span>
-                                                        <span class="text-base text-gray-800">{{ $option->name }}</span>
-                                                    </label>
-                                                    @endforeach
-                                                </div>
+                                                @foreach($quizQuestion->question->options as $option)
+                                                <label class="flex items-center gap-3 p-3 border rounded-lg hover:bg-white transition cursor-pointer">
+                                                    <input
+                                                        type="{{ $inputType }}"
+                                                        name="{{ $inputName }}"
+                                                        value="{{ $option->id }}"
+                                                        class="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
+                                                        {{ !$isSingleAnswer && !$quizQuestion->is_optional ? '' : '' }}>
+                                                    <span class="w-8 h-8 flex items-center justify-center border rounded border-gray-300 text-base font-medium">
+                                                        {{ chr(65 + $loop->index) }}
+                                                    </span>
+                                                    <span class="text-base text-gray-800">{{ $option->name }}</span>
+                                                </label>
+                                                @endforeach
+                                            </div>
                                             @endif
                                         </div>
                                     </div>
@@ -155,11 +157,10 @@
 
                     <!-- Submit Button -->
                     <div class="mt-8 text-center space-y-4">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             class="inline-flex items-center px-6 py-3 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                            onclick="return confirm('Are you sure you want to submit your quiz? You cannot change your answers after submission.');"
-                        >
+                            onclick="return confirm('Are you sure you want to submit your quiz? You cannot change your answers after submission.');">
                             Submit Quiz
                         </button>
                         <div>

@@ -87,9 +87,16 @@
                             </a>
                         </div>
                         <div>
-                            <a href="" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 mr-2">
+                            <a href="{{ route('topics.edit', $topic->id) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 mr-2">
                                 Edit Topic
                             </a>
+                            <form method="POST" action="{{ route('topics.destroy', $topic->id) }}" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this topic? This action cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 focus:bg-red-700 active:bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Delete
+                                </button>
+                            </form>
                         </div>
                     </div>
 
@@ -206,7 +213,7 @@
                                             <span> Total: {{ $quiz->total_marks }} marks</span>
                                             <span>Pass: {{ $quiz->pass_marks }} marks</span>
                                             @if($quiz->duration > 0)
-                                            <span> {{ $quiz->duration }} sec</span>
+                                            <span> {{ $quiz->duration }} min</span>
                                             @endif
                                         </div>
                                     </div>

@@ -80,4 +80,49 @@ class TopicController extends Controller
             'topic' => $topic,
         ]);
     }
+
+    /**
+     * Show edit form for the topic (admin only)
+     */
+    public function edit(Topic $topic)
+    {
+        return view('topics.edit', [
+            'topic' => $topic,
+        ]);
+    }
+
+    /**
+     * Update the topic
+     */
+    public function update(Request $request, Topic $topic)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        if (isset($data['name']) && $data['name'] !== $topic->name) {
+            $data['slug'] = Str::slug($data['name']);
+        }
+
+        $topic->update($data);
+
+        return redirect()->route('topics.show', $topic->id)->with('success', 'Topic updated successfully.');
+    }
+
+    /**
+     * Soft-delete the topic (admin only)
+     */
+    public function destroy(Topic $topic)
+    {
+        $parentId = $topic->parent_id;
+        $topic->delete();
+
+        if ($parentId) {
+            return redirect()->route('topics.show', $parentId)->with('success', 'Sub-topic deleted.');
+        }
+
+        return redirect()->route('topics.index')->with('success', 'Topic deleted.');
+    }
 }
