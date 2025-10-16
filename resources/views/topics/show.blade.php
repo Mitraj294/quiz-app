@@ -230,8 +230,8 @@
                                     </a>
                                     @else
                                     @if($quiz->is_published && $quiz->questions->count() > 0)
-                                    <a href="{{ route('quizzes.attempt', $quiz->id) }}" class="text-sm text-green-600 hover:text-green-900 font-medium">
-                                        Start Quiz
+                                    <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-blue-600 hover:text--900 font-medium">
+                                    Quiz Details
                                     </a>
                                     @else
                                     <span class="text-sm text-gray-500">Not available</span>

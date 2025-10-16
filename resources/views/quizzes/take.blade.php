@@ -67,6 +67,7 @@
                                                 @elseif($quizQuestion->question->media_type === 'video')
                                                 <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
                                                     <source src="{{ asset($quizQuestion->question->media_url) }}" type="video/mp4">
+                                                    <track kind="captions" srclang="en" label="English captions" src="{{ asset('media/captions/placeholder.vtt') }}">
                                                     Your browser does not support the video tag.
                                                 </video>
                                                 @elseif($quizQuestion->question->media_type === 'audio')
@@ -156,15 +157,19 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="mt-8 text-center space-y-4">
-                        <button
+                    <div class="flex gap-4 mt-4">
+                        <div><button
                             type="submit"
-                            class="inline-flex items-center px-6 py-3 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             onclick="return confirm('Are you sure you want to submit your quiz? You cannot change your answers after submission.');">
                             Submit Quiz
                         </button>
-                        <div>
-                            <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+                        </div>
+                        
+                            <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
+
+                      
+                      
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Quiz;
 use App\Models\Topic;
 use Illuminate\Support\Str;
@@ -23,6 +24,8 @@ class QuizController extends Controller
     private const RULE_NULLABLE_ARRAY = 'nullable|array';
     private const RULE_NULLABLE_NUM_MIN0 = 'nullable|numeric|min:0';
     private const RULE_NULLABLE_BOOLEAN = 'nullable|boolean';
+    private const RULE_REQUIRED_STRING_MAX255 = 'required|string|max:255';
+    private const RULE_NULLABLE_DATE = 'nullable|date';
     private const TEXT_SHORT_ANSWER = 'fill_the_blank';
 
     public function index()
@@ -52,15 +55,15 @@ class QuizController extends Controller
     public function update(Request $request, Quiz $quiz)
     {
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => self::RULE_REQUIRED_STRING_MAX255,
             'description' => self::RULE_NULLABLE_STRING,
-            'total_marks' => 'nullable|numeric|min:0',
-            'pass_marks' => 'nullable|numeric|min:0',
+            'total_marks' => self::RULE_NULLABLE_NUM_MIN0,
+            'pass_marks' => self::RULE_NULLABLE_NUM_MIN0,
             'max_attempts' => self::RULE_NULLABLE_INT_MIN0,
             'is_published' => 'nullable|in:0,1',
             'duration' => self::RULE_NULLABLE_INT_MIN0,
-            'valid_from' => 'nullable|date',
-            'valid_upto' => 'nullable|date',
+            'valid_from' => self::RULE_NULLABLE_DATE,
+            'valid_upto' => self::RULE_NULLABLE_DATE,
             'time_between_attempts' => self::RULE_NULLABLE_INT_MIN0,
             'topic_id' => 'nullable|exists:topics,id',
         ];
@@ -92,7 +95,7 @@ class QuizController extends Controller
     {
         // Validation rules depend on topic_option
         $rules = [
-            'name' => 'required|string|max:255',
+            'name' => self::RULE_REQUIRED_STRING_MAX255,
             'description' => self::RULE_NULLABLE_STRING,
             'total_marks' => 'nullable|numeric',
             'pass_marks' => 'nullable|numeric',
@@ -102,8 +105,8 @@ class QuizController extends Controller
             'media_url' => self::RULE_NULLABLE_STRING,
             'media_type' => self::RULE_NULLABLE_STRING,
             'duration' => self::RULE_NULLABLE_INT_MIN0,
-            'valid_from' => 'nullable|date',
-            'valid_upto' => 'nullable|date',
+            'valid_from' => self::RULE_NULLABLE_DATE,
+            'valid_upto' => self::RULE_NULLABLE_DATE,
             'time_between_attempts' => self::RULE_NULLABLE_INT_MIN0,
             'topic_option' => 'required|in:existing,new',
         ];
@@ -537,5 +540,23 @@ class QuizController extends Controller
         Log::info('Quiz publish toggled', ['quiz_id' => $quiz->id, 'is_published' => $quiz->is_published, 'total_marks' => $quiz->total_marks ?? null, 'pass_marks' => $quiz->pass_marks ?? null]);
 
         return redirect()->route('quizzes.show', $quiz->id)->with('success', $message);
+    }
+
+    /**
+     * Show a paginated list of attempts for the current user for this quiz.
+     */
+    public function resultIndex(Quiz $quiz)
+    {
+        $userId = Auth::id();
+        if (! $userId) {
+            return redirect()->route('quizzes.show', $quiz->id)->with('error', 'Please login to view results');
+        }
+
+        $attempts = \App\Models\Attempt::where('quiz_id', $quiz->id)
+            ->where('user_id', $userId)
+            ->orderByDesc('completed_at')
+            ->paginate(15);
+
+        return view('quizzes.result_index', compact('quiz', 'attempts'));
     }
 }

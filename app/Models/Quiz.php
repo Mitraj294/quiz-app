@@ -19,4 +19,22 @@ class Quiz extends BaseQuiz
     {
         return 'id';
     }
+
+    /**
+     * Return number of attempts for a given user id.
+     * Uses the application Attempt model directly to avoid any vendor soft-delete scopes.
+     *
+     * @param int|null $userId
+     * @return int
+     */
+    public function attemptsCountForUser(?int $userId): int
+    {
+        if (! $userId) {
+            return 0;
+        }
+
+        return \App\Models\Attempt::where('quiz_id', $this->id)
+            ->where('user_id', $userId)
+            ->count();
+    }
 }

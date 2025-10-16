@@ -23,6 +23,10 @@ if (! defined('TOPIC_PATH')) {
     define('TOPIC_PATH', '/topics/{topic}');
 }
 
+if (! defined('EDIT_SUFFIX')) {
+    define('EDIT_SUFFIX', '/edit');
+}
+
 Route::view('/', 'welcome');
 
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
@@ -47,7 +51,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/quizzes/create', [QuizController::class, 'create'])->name('quizzes.create');
     Route::post('/quizzes', [QuizController::class, 'store'])->name('quizzes.store');
-    Route::get(QUIZ_PATH . '/edit', [QuizController::class, 'edit'])->name('quizzes.edit');
+    Route::get(QUIZ_PATH . EDIT_SUFFIX, [QuizController::class, 'edit'])->name('quizzes.edit');
     Route::put(QUIZ_PATH, [QuizController::class, 'update'])->name('quizzes.update');
     Route::delete(QUIZ_PATH, [QuizController::class, 'destroy'])->name('quizzes.destroy');
 
@@ -57,12 +61,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Topic management (admin)
     Route::post('/topics', [TopicController::class, 'store'])->name('topics.store');
-    Route::get(TOPIC_PATH . '/edit', [TopicController::class, 'edit'])->name('topics.edit');
+    Route::get(TOPIC_PATH . EDIT_SUFFIX, [TopicController::class, 'edit'])->name('topics.edit');
     Route::put(TOPIC_PATH, [TopicController::class, 'update'])->name('topics.update');
     Route::delete(TOPIC_PATH, [TopicController::class, 'destroy'])->name('topics.destroy');
 
     // Question CRUD
-    Route::get(QUESTION_PATH . '/edit', [QuestionController::class, 'edit'])->name('questions.edit');
+    Route::get(QUESTION_PATH . EDIT_SUFFIX, [QuestionController::class, 'edit'])->name('questions.edit');
     Route::put(QUESTION_PATH, [QuestionController::class, 'update'])->name('questions.update');
     Route::delete(QUESTION_PATH, [QuestionController::class, 'destroy'])->name('questions.destroy');
 
@@ -85,6 +89,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // Quiz public routes for authenticated users (must be after admin routes)
 Route::middleware('auth')->group(function () {
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
+    Route::get('/quizzes/{quiz}/results', [QuizController::class, 'resultIndex'])->name('quizzes.result_index');
     Route::get('/quizzes/{quiz}/attempt', [AttemptController::class, 'start'])->name('quizzes.attempt');
     Route::post('/quizzes/{quiz}/submit', [AttemptController::class, 'submit'])->name('quizzes.submit');
 });

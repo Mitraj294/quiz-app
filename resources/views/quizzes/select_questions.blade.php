@@ -118,6 +118,7 @@
                                                 @elseif($question->media_type === 'video')
                                                 <video controls class="max-w-md rounded-lg shadow-md border border-gray-200">
                                                     <source src="{{ asset($question->media_url) }}" type="video/mp4">
+                                                    <track kind="captions" srclang="en" label="English captions" src="{{ asset('media/captions/placeholder.vtt') }}">
                                                     Your browser does not support the video tag.
                                                 </video>
                                                 @elseif($question->media_type === 'audio')
