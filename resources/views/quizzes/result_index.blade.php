@@ -18,11 +18,7 @@
                                     <div>
                                         <div class="text-sm text-gray-600">Score</div>
                                         <div class="text-lg font-semibold">
-                                            @if($attempt->score >= (float)($quiz->pass_mark ?? 0))
-                                                <span class="text-green-600">{{ $attempt->score }}</span>
-                                            @else
-                                                <span class="text-red-600">{{ $attempt->score }}</span>
-                                            @endif
+                                            <span class="{{ $attempt->passed ? 'text-green-600' : 'text-red-600' }}">{{ $attempt->score }}</span>
                                         </div>
                                     </div>
                                     <div>

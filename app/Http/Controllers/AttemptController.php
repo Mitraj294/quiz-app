@@ -41,7 +41,23 @@ class AttemptController extends Controller
         // Prefer `quizzes.take` view if present; otherwise fallback to `quizzes.attempt`.
         $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
 
-        return view($viewName, compact('quiz'));
+        // Find an existing in-progress attempt (no completed_at) for this user and quiz
+        $attempt = Attempt::where('quiz_id', $quiz->id)
+            ->where('user_id', Auth::id())
+            ->whereNull('completed_at')
+            ->first();
+
+        if (! $attempt) {
+            $attempt = Attempt::create([
+                'user_id' => Auth::id(),
+                'quiz_id' => $quiz->id,
+                'score' => 0.00,
+                'passed' => 0,
+                'completed_at' => null,
+            ]);
+        }
+
+        return view($viewName, compact('quiz', 'attempt'));
     }
 
     /**
@@ -68,15 +84,31 @@ class AttemptController extends Controller
                 'request_answers_count' => is_array($answers) ? count($answers) : 0,
             ]);
 
-            // Create attempt record (no scoring for now)
-            // Ensure DB non-null constraints are respected by providing defaults
-            $attempt = Attempt::create([
-                'user_id' => $user->id,
-                'quiz_id' => $quiz->id,
-                'score' => 0.00,
-                'passed' => 0,
-                'completed_at' => now(),
-            ]);
+
+            // Use provided attempt if available (created when user clicked Start)
+            $attemptId = $request->input('attempt_id');
+            if ($attemptId) {
+                $attempt = Attempt::where('id', $attemptId)
+                    ->where('quiz_id', $quiz->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+            }
+
+            // If an attempt was not provided or not found, create a new one
+            if (empty($attempt)) {
+                $attempt = Attempt::create([
+                    'user_id' => $user->id,
+                    'quiz_id' => $quiz->id,
+                    'score' => 0.00,
+                    'passed' => 0,
+                    // completed_at will be set below when submission finishes
+                    'completed_at' => null,
+                ]);
+            }
+
+            // Mark attempt as completed now (submission time)
+            $attempt->completed_at = now();
+            $attempt->save();
 
             Log::info('Created attempt record', ['attempt_id' => $attempt->id]);
 
@@ -221,11 +253,13 @@ class AttemptController extends Controller
 
         if (count($selected) > 0) {
             foreach ($selected as $optionId) {
+                $opt = $question->options->firstWhere('id', $optionId);
+
                 AttemptAnswer::create([
                     'quiz_attempt_id' => $attempt->id,
                     'question_id' => $questionId,
                     'option_id' => $optionId,
-                    'answer_text' => null,
+                    'answer_text' => $opt ? trim((string)$opt->option) : '',
                 ]);
             }
         } else {

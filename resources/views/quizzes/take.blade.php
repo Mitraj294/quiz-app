@@ -45,6 +45,9 @@
             <!-- Quiz Form -->
             <form method="POST" action="{{ route('quizzes.submit', $quiz->id) }}" id="quiz-form">
                 @csrf
+                @if(isset($attempt) && $attempt)
+                    <input type="hidden" name="attempt_id" value="{{ $attempt->id }}">
+                @endif
 
                 <!-- Questions List -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
