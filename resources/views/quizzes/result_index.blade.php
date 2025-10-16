@@ -44,7 +44,7 @@
                                         <div class="text-lg">{{ $attempt->completed_at }}</div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <a href="#" class="inline-flex items-center px-3 py-2 bg-white border border-gray-200 rounded text-sm text-blue-600 hover:bg-gray-50">View</a>
+                                        <a href="{{ route('quizzes.attempt_show', ['quiz' => $quiz->id, 'attempt' => $attempt->id]) }}" class="inline-flex items-center px-3 py-2 bg-white border border-gray-200 rounded text-sm text-blue-600 hover:bg-gray-50">View</a>
                                     </div>
                                 </div>
                             </div>

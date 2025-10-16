@@ -30,6 +30,6 @@ class Attempt extends Model
 
     public function answers(): HasMany
     {
-        return $this->hasMany(AttemptAnswer::class);
+        return $this->hasMany(AttemptAnswer::class, 'quiz_attempt_id');
     }
 }

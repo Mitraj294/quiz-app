@@ -90,6 +90,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
     Route::get('/quizzes/{quiz}/results', [QuizController::class, 'resultIndex'])->name('quizzes.result_index');
+    Route::get('/quizzes/{quiz}/attempts/{attempt}', [AttemptController::class, 'show'])->name('quizzes.attempt_show');
     Route::get('/quizzes/{quiz}/attempt', [AttemptController::class, 'start'])->name('quizzes.attempt');
     Route::post('/quizzes/{quiz}/submit', [AttemptController::class, 'submit'])->name('quizzes.submit');
 });

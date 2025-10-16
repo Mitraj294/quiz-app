@@ -20,7 +20,6 @@ class UserRole
             abort(403);
         }
 
-        // User model has roles() relation and hasRole() helper
         if (! method_exists($user, 'hasRole') || ! $user->hasRole($role)) {
             abort(403);
         }
