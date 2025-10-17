@@ -12,28 +12,28 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-nav-link class="text-lg font-bold text-gray-900" :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
                     @if(Auth::check() && Auth::user()->isAdmin())
-                        <x-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*')">
                             {{ __('Manage Quiz') }}
                         </x-nav-link>
-                        <x-nav-link :href="url('/topics')" :active="request()->is('topics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Manage Topics') }}
                         </x-nav-link>
-                        <x-nav-link :href="url('/users')" :active="request()->is('users*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/users')" :active="request()->is('users*')">
                             {{ __('Manage Users') }}
                         </x-nav-link>
-                        <x-nav-link :href="url('/admin/analytics')" :active="request()->is('analytics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/admin/analytics')" :active="request()->is('analytics*')">
                             {{ __('Analytics') }}
                         </x-nav-link>
                     @else
-                        <x-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*')">
                             {{ __('Quizzes') }}
                         </x-nav-link>
-                        <x-nav-link :href="url('/topics')" :active="request()->is('topics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Topics') }}
                         </x-nav-link>
                     @endif
@@ -44,8 +44,8 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                            <div class="text-lg font-semibold text-gray-900">{{ Auth::user()->name }}</div>
 
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
