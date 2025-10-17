@@ -84,6 +84,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Publish/unpublish
     Route::post(QUIZ_PATH . '/publish', [QuizController::class, 'publish'])->name('quizzes.publish');
+
+    // Quiz authors management
+    Route::post(QUIZ_PATH . '/authors', [\App\Http\Controllers\QuizAuthorController::class, 'attach'])->name('quizzes.authors.attach');
+    Route::delete(QUIZ_PATH . '/authors/{user}', [\App\Http\Controllers\QuizAuthorController::class, 'detach'])->name('quizzes.authors.detach');
 });
 
 // Quiz public routes for authenticated users (must be after admin routes)

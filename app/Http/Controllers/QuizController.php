@@ -118,7 +118,8 @@ class QuizController extends Controller
     public function edit(Quiz $quiz)
     {
         $topics = Topic::orderBy('name')->get();
-        return view('quizzes.edit', compact('quiz', 'topics'));
+        $users = \App\Models\User::orderBy('name')->get();
+        return view('quizzes.edit', compact('quiz', 'topics', 'users'));
     }
 
     /**

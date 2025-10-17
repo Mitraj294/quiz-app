@@ -87,6 +87,10 @@
                         <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
                     </div>
                 </form>
+                
+                <div class="mt-6">
+                    @include('quizzes._authors', ['quiz' => $quiz, 'users' => $users])
+                </div>
             </div>
         </div>
     </div>

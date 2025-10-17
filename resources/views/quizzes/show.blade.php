@@ -12,6 +12,17 @@
                 <h3 class="text-xl font-bold mb-4">{{ $quiz->name }}</h3>
                 <p class="text-gray-700 mb-4">{{ $quiz->description }}</p>
 
+                @if($quiz->authors && $quiz->authors->count() > 0)
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold mb-2">Authors</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700">
+                        @foreach($quiz->authors as $author)
+                            <li>{{ $author->name }} @if($author->pivot->author_role) <small class="text-gray-500">({{ $author->pivot->author_role }})</small> @endif</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
                 <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     @php
                     $totalQuestions = $quiz->questions->count();
