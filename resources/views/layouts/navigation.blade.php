@@ -23,6 +23,12 @@
                         <x-nav-link :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Manage Topics') }}
                         </x-nav-link>
+                        <x-nav-link :href="url('/users')" :active="request()->is('users*')">
+                            {{ __('Manage Users') }}
+                        </x-nav-link>
+                        <x-nav-link :href="url('/admin/analytics')" :active="request()->is('analytics*')">
+                            {{ __('Analytics') }}
+                        </x-nav-link>
                     @else
                         <x-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
                             {{ __('Quizzes') }}

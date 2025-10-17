@@ -135,7 +135,7 @@
                                                 <div>
                                                     @if(! $isBlank && count($correctOptions) > 1 && $isCorrect && ! $isSelected)
                                                     <div class="ml-3 inline-block text-red-700 bg-red-100 border border-red-400 px-2 py-1 rounded font-semibold">
-                                                        Correct, not selected
+                                                        Correct, But not selected
                                                     </div>
                                                     @endif
                                                 </div>

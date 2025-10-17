@@ -88,6 +88,24 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Quiz authors management
     Route::post(QUIZ_PATH . '/authors', [\App\Http\Controllers\QuizAuthorController::class, 'attach'])->name('quizzes.authors.attach');
     Route::delete(QUIZ_PATH . '/authors/{user}', [\App\Http\Controllers\QuizAuthorController::class, 'detach'])->name('quizzes.authors.detach');
+
+    // Admin: users list
+    Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    // Assign a role to a user
+    Route::post('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'assignRole'])->name('users.roles.assign');
+    // Remove a role from a user (by id or name)
+    Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\UserController::class, 'removeRole'])->name('users.roles.remove');
+
+    // Admin analytics
+    Route::get('/admin/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
+    // Full admin pages for lists
+    // Topics are loaded inline inside the analytics page as a fragment/partial
+    Route::get('/admin/analytics/topics/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'topicsFragment'])->name('admin.analytics.topics.fragment');
+    Route::get('/admin/analytics/topics/{topic}/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'topicFragment'])->name('admin.analytics.topic.fragment');
+    // Quizzes and Users will be loaded inline as fragments
+    Route::get('/admin/analytics/quizzes/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'quizzesFragment'])->name('admin.analytics.quizzes.fragment');
+    Route::get('/admin/analytics/users/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'usersFragment'])->name('admin.analytics.users.fragment');
+    // (drilldown JSON endpoints removed — pages-only analytics)
 });
 
 // Quiz public routes for authenticated users (must be after admin routes)

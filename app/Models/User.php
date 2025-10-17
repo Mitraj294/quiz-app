@@ -51,6 +51,15 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'role_user');
     }
 
+    /**
+     * Quizzes this user is attached to as an author (via quiz_authors pivot).
+     */
+    public function authoredQuizzes()
+    {
+        return $this->belongsToMany(\App\Models\Quiz::class, 'quiz_authors', 'author_id', 'quiz_id')
+            ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at', 'deleted_at']);
+    }
+
     public function hasRole(string $roleName): bool
     {
         return $this->roles()->where('role', $roleName)->exists();
@@ -64,5 +73,13 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->hasRole('user');
+    }
+
+    /**
+     * Quiz attempts by this user (uses application Attempt model)
+     */
+    public function attempts()
+    {
+        return $this->hasMany(\App\Models\Attempt::class, 'user_id');
     }
 }

@@ -98,7 +98,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Users</h3>
                             <p class="text-sm text-gray-600 mb-4">Manage user accounts</p>
-                            <a href="#" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">View All →</a>
+                            <a href="{{ route('users.index') }}" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">View All →</a>
                         </div>
                     </div>
 
@@ -112,7 +112,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Analytics</h3>
                             <p class="text-sm text-gray-600 mb-4">View platform statistics</p>
-                            <a href="#" class="text-purple-600 hover:text-purple-800 text-sm font-medium">View Stats →</a>
+                            <a href="{{ route('admin.analytics') }}" class="text-purple-600 hover:text-purple-800 text-sm font-medium">View Stats →</a>
                         </div>
                     </div>
                 </div>
