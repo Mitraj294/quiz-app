@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Topic;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,11 @@ class TopicController extends Controller
 
         $data['slug'] = Str::slug($data['name']);
 
-        Topic::create($data);
+        $topic = Topic::create($data);
+
+        if (!$topic) {
+            return back()->withInput()->withErrors(['error' => 'Failed to create topic. Please try again.']);
+        }
 
         // If creating a sub-topic, redirect back to parent topic
         $parentId = $data['parent_id'] ?? null;
@@ -57,10 +62,11 @@ class TopicController extends Controller
             ->pluck('topicable_id');
 
         // Load quizzes based on user role
-        /** @var \App\Models\User|null $user */
-        $user = Auth::user();
+    /** @var User|null $user */
+    $user = Auth::user();
 
-        if ($user && $user->isAdmin()) {
+    // Ensure analyzer and runtime know $user is the app User model before calling isAdmin()
+    if ($user instanceof User && $user->isAdmin()) {
             // Admins see all quizzes (including drafts)
             $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
                 ->with('questions')
@@ -116,6 +122,11 @@ class TopicController extends Controller
      */
     public function destroy(Topic $topic)
     {
+        $user = Auth::user();
+        if (! ($user instanceof User) || ! $user->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $parentId = $topic->parent_id;
         $topic->delete();
 
