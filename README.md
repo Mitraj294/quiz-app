@@ -399,6 +399,14 @@ Choose the approach that best matches your environment.
   - Node.js >= 18 and npm or Yarn
   - MySQL 8.0+ (or use SQLite for quick local setup)
 
+## 🧭 Class diagram
+
+The following diagram shows the main domain classes and relationships used in this application (Users, Quizzes, Questions, Topics, Attempts, and related pivot models).
+
+![Class diagram](./ClassDiagram.png)
+
+The repository already contains the image at `ClassDiagram.png` — no further action is required.
+
   On Ubuntu a quick install (example):
 
   ```bash
