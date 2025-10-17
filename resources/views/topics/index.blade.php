@@ -47,7 +47,7 @@
                             @csrf
                             <div class="mb-4">
                                 <label for="name" class="block text-sm font-medium mb-2">Topic Name <span class="text-red-500">*</span></label>
-                                <input type="text" id="name" name="name" value="{{ old('name') }}" required 
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required 
                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 @error('name') border-red-500 @enderror">
                                 @error('name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

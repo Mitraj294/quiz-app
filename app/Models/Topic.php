@@ -12,6 +12,11 @@ class Topic extends BaseTopic
     // Keep this class intentionally small — it inherits behavior from the package model.
 
     /**
+     * Allow description to be mass assigned from forms in the app.
+     */
+    protected $fillable = ['name', 'slug', 'parent_id', 'is_active', 'description'];
+
+    /**
      * Auto-generate a unique slug from the name if missing.
      */
     protected static function booted()

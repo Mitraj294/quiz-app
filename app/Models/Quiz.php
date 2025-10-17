@@ -37,4 +37,23 @@ class Quiz extends BaseQuiz
             ->where('user_id', $userId)
             ->count();
     }
+
+    /**
+     * One-to-many relation to the QuizAuthor model which stores pivot-like meta
+     * information about authors attached to a quiz.
+     */
+    public function quiz_authors()
+    {
+        return $this->hasMany(\App\Models\QuizAuthor::class, 'quiz_id');
+    }
+
+    /**
+     * Convenience many-to-many-like accessor for author User models.
+     * Uses the `quiz_authors` table as the pivot to access users.
+     */
+    public function authors()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'quiz_authors', 'quiz_id', 'author_id')
+            ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at', 'deleted_at']);
+    }
 }
