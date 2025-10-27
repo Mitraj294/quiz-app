@@ -140,22 +140,22 @@
                                 <div class="grid grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="max_attempts" class="block text-sm font-medium mb-2">Max Attempts</label>
-                                        <input type="number" id="max_attempts" name="max_attempts" value="{{ old('max_attempts', 0) }}" class="w-full rounded-md border-gray-300">
+                                        <input type="number" id="max_attempts" name="max_attempts" value="{{ old('max_attempts', 0) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                     <div>
                                         <label for="time_between_attempts" class="block text-sm font-medium mb-2">Time Between Attempts (minutes)</label>
-                                        <input type="number" id="time_between_attempts" name="time_between_attempts" value="{{ old('time_between_attempts', 0) }}" class="w-full rounded-md border-gray-300">
+                                        <input type="number" id="time_between_attempts" name="time_between_attempts" value="{{ old('time_between_attempts', 0) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="duration" class="block text-sm font-medium mb-2">Duration (minutes)</label>
-                                        <input type="number" id="duration" name="duration" value="{{ old('duration', 0) }}" class="w-full rounded-md border-gray-300">
+                                        <input type="number" id="duration" name="duration" value="{{ old('duration', 0) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                     <div>
                                         <label for="is_published" class="block text-sm font-medium mb-2">Publish</label>
-                                        <select name="is_published" id="is_published" class="w-full rounded-md border-gray-300">
+                                        <select name="is_published" id="is_published" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                             <option value="0" {{ old('is_published') == 0 ? 'selected' : '' }}>Draft</option>
                                             <option value="1" {{ old('is_published') == 1 ? 'selected' : '' }}>Published</option>
                                         </select>
@@ -165,11 +165,11 @@
                                 <div class="grid grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="valid_from" class="block text-sm font-medium mb-2">Valid From</label>
-                                        <input type="datetime-local" name="valid_from" id="valid_from" value="{{ old('valid_from') }}" class="w-full rounded-md border-gray-300">
+                                        <input type="datetime-local" name="valid_from" id="valid_from" value="{{ old('valid_from') }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                     <div>
                                         <label for="valid_upto" class="block text-sm font-medium mb-2">Valid Upto</label>
-                                        <input type="datetime-local" name="valid_upto" id="valid_upto" value="{{ old('valid_upto') }}" class="w-full rounded-md border-gray-300">
+                                        <input type="datetime-local" name="valid_upto" id="valid_upto" value="{{ old('valid_upto') }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                 </div>
 

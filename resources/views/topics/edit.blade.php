@@ -13,12 +13,12 @@
 
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium mb-2">Topic Name</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $topic->name) }}" required class="w-full rounded-md border-gray-300">
+                        <input type="text" id="name" name="name" value="{{ old('name', $topic->name) }}" required class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                     </div>
 
                     <div class="mb-4">
                         <label for="description" class="block text-sm font-medium mb-2">Description</label>
-                        <textarea id="description" name="description" rows="4" class="w-full rounded-md border-gray-300">{{ old('description', $topic->description) }}</textarea>
+                        <textarea id="description" name="description" rows="4" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description', $topic->description) }}</textarea>
                     </div>
 
                     <div class="flex gap-4">

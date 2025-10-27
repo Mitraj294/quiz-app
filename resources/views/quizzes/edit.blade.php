@@ -22,33 +22,33 @@
 
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium mb-2">Quiz Name</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $quiz->name) }}" required class="w-full rounded-md border-gray-300">
+                        <input type="text" id="name" name="name" value="{{ old('name', $quiz->name) }}" required class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                     </div>
 
                     <div class="mb-4">
                         <label for="description" class="block text-sm font-medium mb-2">Description</label>
-                        <textarea id="description" name="description" rows="3" class="w-full rounded-md border-gray-300">{{ old('description', $quiz->description) }}</textarea>
+                        <textarea id="description" name="description" rows="3" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description', $quiz->description) }}</textarea>
                     </div>
 
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
                             <label for="total_marks" class="block text-sm font-medium mb-2">Total Marks</label>
-                            <input type="number" step="0.01" id="total_marks" name="total_marks" value="{{ old('total_marks', $quiz->total_marks) }}" class="w-full rounded-md border-gray-300">
+                            <input type="number" step="0.01" id="total_marks" name="total_marks" value="{{ old('total_marks', $quiz->total_marks) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="pass_marks" class="block text-sm font-medium mb-2">Pass Marks</label>
-                            <input type="number" step="0.01" id="pass_marks" name="pass_marks" value="{{ old('pass_marks', $quiz->pass_marks) }}" class="w-full rounded-md border-gray-300">
+                            <input type="number" step="0.01" id="pass_marks" name="pass_marks" value="{{ old('pass_marks', $quiz->pass_marks) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="max_attempts" class="block text-sm font-medium mb-2">Max Attempts (0 = Unlimited)</label>
-                            <input type="number" id="max_attempts" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" class="w-full rounded-md border-gray-300">
+                            <input type="number" id="max_attempts" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
                             <label for="duration" class="block text-sm font-medium mb-2">Duration (minutes)</label>
-                            <input type="number" id="duration" name="duration" value="{{ old('duration', $quiz->duration) }}" class="w-full rounded-md border-gray-300">
+                            <input type="number" id="duration" name="duration" value="{{ old('duration', $quiz->duration) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="valid_from" class="block text-sm font-medium mb-2">Valid From</label>
@@ -58,7 +58,7 @@
                                     $vf = \Carbon\Carbon::parse($quiz->valid_from)->format('Y-m-d\TH:i');
                                 }
                             @endphp
-                            <input type="datetime-local" id="valid_from" name="valid_from" value="{{ $vf }}" class="w-full rounded-md border-gray-300">
+                            <input type="datetime-local" id="valid_from" name="valid_from" value="{{ $vf }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="valid_upto" class="block text-sm font-medium mb-2">Valid Upto</label>
@@ -68,13 +68,13 @@
                                     $vu = \Carbon\Carbon::parse($quiz->valid_upto)->format('Y-m-d\TH:i');
                                 }
                             @endphp
-                            <input type="datetime-local" id="valid_upto" name="valid_upto" value="{{ $vu }}" class="w-full rounded-md border-gray-300">
+                            <input type="datetime-local" id="valid_upto" name="valid_upto" value="{{ $vu }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <label for="topic_id" class="block text-sm font-medium mb-2">Attach Topic (optional)</label>
-                        <select id="topic_id" name="topic_id" class="w-full rounded-md border-gray-300">
+                        <select id="topic_id" name="topic_id" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             <option value="">-- Keep existing --</option>
                             @foreach($topics as $topic)
                                 <option value="{{ $topic->id }}" {{ $quiz->topics->contains($topic) ? 'selected' : '' }}>{{ $topic->name }}</option>

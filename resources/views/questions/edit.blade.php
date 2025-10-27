@@ -23,7 +23,7 @@
 
                     <div class="mb-4">
                         <label for="question_type" class="block text-sm font-medium mb-2">Question Type</label>
-                        <select name="question_type" id="question_type" onchange="onTypeChange()" class="w-full rounded-md border-gray-300">
+                        <select name="question_type" id="question_type" onchange="onTypeChange()" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             @foreach($questionTypes as $key => $label)
                                 <option value="{{ $key }}" {{ $currentType == $key ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $label)) }}</option>
                             @endforeach
@@ -32,7 +32,7 @@
 
                     <div class="mb-4">
                         <label for="question_text" class="block text-sm font-medium mb-2">Question Text</label>
-                        <textarea name="question_text" id="question_text" rows="3" class="w-full rounded-md border-gray-300">{{ old('question_text', $question->name ?? '') }}</textarea>
+                        <textarea name="question_text" id="question_text" rows="3" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('question_text', $question->name ?? '') }}</textarea>
                     </div>
 
                     <div class="mb-4">
@@ -83,7 +83,7 @@
 
                     <div id="text-answer" class="mb-4" style="display:none;">
                         <label for="text_answer_input" class="block text-sm font-medium mb-2">Answer (for Fill in the Blank)</label>
-                        <input type="text" name="text_answer" id="text_answer_input" class="w-full rounded-md border-gray-300" value="{{ old('text_answer', optional($question->correct_options()->first())->name ?? '') }}">
+                        <input type="text" name="text_answer" id="text_answer_input" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('text_answer', optional($question->correct_options()->first())->name ?? '') }}">
                     </div>
 
                     <div class="flex gap-4">
@@ -133,7 +133,7 @@
             div.innerHTML = `
                 <span class="w-6 text-sm font-medium">${labelForIndex(idx)}</span>
                 <input type="checkbox" name="correct[]" value="${idx}" class="correct-checkbox" ${checked ? 'checked' : ''}>
-                <input type="text" name="options[]" class="w-full rounded-md border-gray-300" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
+                <input type="text" name="options[]" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
                 <button type="button" class="ml-2 text-red-500 hover:text-red-700 remove-option" onclick="removeOptionField(this)" title="Remove option">Remove</button>
             `;
             list.appendChild(div);
