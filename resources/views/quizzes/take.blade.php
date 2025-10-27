@@ -84,15 +84,15 @@
 
                                             @if($quizQuestion->question->question_type->name === 'fill_the_blank')
                                             <!-- Fill in the Blank Answer -->
-                                            <div class="mt-4">
+                                            <div class="mt-4 w-full">
                                                 <label for="answer_{{ $quizQuestion->question->id }}" class="block text-sm font-medium text-gray-700 mb-2">Your Answer:</label>
-                                                <input
-                                                    type="text"
+                                                <textarea
                                                     id="answer_{{ $quizQuestion->question->id }}"
                                                     name="answers[{{ $quizQuestion->question->id }}]"
-                                                    class="w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    rows="4"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                                     placeholder="Type your answer here"
-                                                    {{ $quizQuestion->is_optional ? '' : 'required' }}>
+                                                    {{ $quizQuestion->is_optional ? '' : 'required' }}></textarea>
                                             </div>
                                             @else
                                             <!-- MCQ Options -->

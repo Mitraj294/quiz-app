@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Ensure auth/login inputs never overflow their container */
+@layer components {
+	.auth-card form { overflow: hidden; }
+	/* Apply full-width only to text-like controls */
+	.auth-card input:not([type="checkbox"]):not([type="radio"]),
+	.auth-card select,
+	.auth-card textarea {
+		max-width: 100%;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	/* In flex rows, allow children to shrink inside the card */
+	.auth-card .flex > * { min-width: 0; }
+
+	/* Disable outer focus ring for all checkboxes and radios app-wide */
+	input[type="checkbox"]:focus,
+	input[type="radio"]:focus {
+		outline: none !important;
+		box-shadow: none !important; /* neutralize Tailwind forms ring */
+		--tw-ring-offset-shadow: 0 0 #0000 !important;
+		--tw-ring-shadow: 0 0 #0000 !important;
+	}
+}

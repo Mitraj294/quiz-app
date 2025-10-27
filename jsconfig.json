@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "checkJs": false
+  },
+  "include": [
+    "resources/**/*.js",
+    "resources/**/*.jsx",
+    "resources/**/*.ts",
+    "resources/**/*.tsx",
+    "resources/**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "public/build",
+    "public/storage",
+    "storage",
+    "bootstrap/cache"
+  ]
+}
