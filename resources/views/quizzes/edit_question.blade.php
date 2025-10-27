@@ -148,7 +148,7 @@
                 <span class="w-6 text-sm font-medium">${labelForIndex(idx)}</span>
                 <input type="checkbox" name="correct[]" value="${idx}" class="correct-checkbox" ${checked ? 'checked' : ''}>
                 <input type="text" name="options[]" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
-                <button type="button" class="ml-2 text-red-500 hover:text-red-700 remove-option" onclick="removeOptionField(this)" title="Remove option">Remove</button>
+                <button type="button" class="px-3 py-1 bg-gray-100 rounded" onclick="removeOptionField(this)" title="Remove option">Remove</button>
             `;
             list.appendChild(div);
         }

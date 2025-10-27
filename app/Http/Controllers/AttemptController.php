@@ -125,7 +125,6 @@ class AttemptController extends Controller
 
             return redirect()->route('quizzes.index')
                 ->with('success', 'Thank you! Your quiz has been submitted successfully. (Attempt ID: ' . $attempt->id . ')');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Quiz submission failed', [
@@ -164,8 +163,8 @@ class AttemptController extends Controller
             'answersByQuestion' => $answersByQuestion,
         ]);
     }
-   
-      /**
+
+    /**
      * Persist answers for an attempt and calculate total score.
      * Returns the total earned score (float).
      */
@@ -286,5 +285,4 @@ class AttemptController extends Controller
 
         return $earned;
     }
-
 }
