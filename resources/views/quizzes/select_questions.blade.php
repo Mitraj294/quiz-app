@@ -37,7 +37,7 @@
                                 <div class="flex items-center gap-3">
                                     <label for="default_marks" class="text-sm font-medium w-36">Marks</label>
                                     <input type="number" id="default_marks" step="0.01" value="1"
-                                        class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="flex-1 rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         onchange="applyToAll('marks', this.value); updateDefaultNegativeOptions();">
                                 </div>
 
@@ -47,7 +47,7 @@
                                     <div class="flex-1">
                                         <div>
                                             <select id="default_negative_marks_enabled"
-                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                           class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                 onchange="toggleDefaultNegativeMarks(this.value)">
                                                 <option value="no">No</option>
                                                 <option value="yes">Yes</option>
@@ -55,8 +55,8 @@
                                         </div>
                                         <div class="mt-2">
                                             <select id="default_negative_marks" data-selected="{{ $defaultNegativeMarks ?? 0 }}"
-                                                class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 hidden">
-                                                <!-- populated dynamically -->
+                                           class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 hidden">
+                                     
                                             </select>
                                         </div>
                                     </div>
@@ -66,7 +66,7 @@
                                 <div class="flex items-center gap-3">
                                     <label for="default_is_optional" class="text-sm font-medium w-36">Is Optional</label>
                                     <select id="default_is_optional"
-                                        class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="flex-1 rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         onchange="applyToAll('is_optional', this.value)">
                                         <option value="0">No</option>
                                         <option value="1">Yes</option>
@@ -161,7 +161,7 @@
                                                         name="marks[{{ $question->id }}]"
                                                         value="{{ $defaultMarks }}"
                                                         step="0.01"
-                                                        class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-marks text-sm py-2 h-9"
+                                                        class="rounded-md border-gray-300 bg-white px-3 shadow-sm question-marks text-sm py-2 h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                         data-question-id="{{ $question->id }}">
                                                 </div>
 
@@ -171,7 +171,7 @@
                                                     <div class="flex flex-col flex-1 gap-2">
                                                                 <div>
                                                                     <select id="negative_enabled_{{ $question->id }}"
-                                                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-negative-enabled text-sm py-2 h-9"
+                                                              class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm question-negative-enabled text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                                         data-question-id="{{ $question->id }}"
                                                                         onchange="toggleQuestionNegativeMarks(this, this.value)">
                                                                         <option value="no" {{ !$hasNegativeMarks ? 'selected' : '' }}>No</option>
@@ -181,7 +181,7 @@
                                                                 <div class="mt-2">
                                                                     <select id="negative_marks_{{ $question->id }}"
                                                                         name="negative_marks[{{ $question->id }}]"
-                                                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm py-2 h-9"
+                                                                            class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                                         data-question-id="{{ $question->id }}" data-selected="{{ $defaultNegativeMarks }}">
                                                                         <!-- populated dynamically based on marks -->
                                                                     </select>
@@ -194,7 +194,7 @@
                                                     <label for="is_optional_{{ $question->id }}" class="text-sm font-medium w-36">Is Optional</label>
                                                     <select id="is_optional_{{ $question->id }}"
                                                         name="is_optional[{{ $question->id }}]"
-                                                        class="flex-1 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 question-optional text-sm py-2 h-9"
+                                                            class="flex-1 rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm question-optional text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                         data-question-id="{{ $question->id }}">
                                                         <option value="0" {{ $defaultIsOptional == 0 ? 'selected' : '' }}>No</option>
                                                         <option value="1" {{ $defaultIsOptional == 1 ? 'selected' : '' }}>Yes</option>

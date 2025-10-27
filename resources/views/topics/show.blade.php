@@ -110,12 +110,12 @@
                             <div class="mb-4">
                                 <label for="subtopic_name" class="block text-sm font-medium mb-2">Sub-Topic Name <span class="text-red-500">*</span></label>
                                 <input type="text" id="subtopic_name" name="name" required
-                                    class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
                             <div class="mb-4">
                                 <label for="subtopic_description" class="block text-sm font-medium mb-2">Description (Optional)</label>
                                 <textarea id="subtopic_description" name="description" rows="2"
-                                    class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                             </div>
                             <div class="flex items-center gap-4">
                                 <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -142,25 +142,25 @@
                             <div class="mb-4">
                                 <label for="quiz_name" class="block text-sm font-medium mb-2">Quiz Name <span class="text-red-500">*</span></label>
                                 <input type="text" id="quiz_name" name="name" required
-                                    class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                     placeholder="e.g., {{ $topic->name }} - Basic Quiz">
                             </div>
                             <div class="mb-4">
                                 <label for="quiz_description" class="block text-sm font-medium mb-2">Description (Optional)</label>
                                 <textarea id="quiz_description" name="description" rows="3"
-                                    class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                                     placeholder="Describe what this quiz covers..."></textarea>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label for="total_marks" class="block text-sm font-medium mb-2">Total Marks</label>
                                     <input type="number" id="total_marks" name="total_marks" step="0.01" value="100"
-                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label for="pass_marks" class="block text-sm font-medium mb-2">Pass Marks</label>
                                     <input type="number" id="pass_marks" name="pass_marks" step="0.01" value="40"
-                                        class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                             </div>
 
@@ -169,7 +169,7 @@
                                     Create Quiz
                                 </button>
                                 <button type="button"
-                                    class="text-sm text-gray-600 hover:text-gray-900"
+                                    class="px-4 py-2 text-gray-700"
                                     onclick="document.getElementById('create-quiz-form').classList.add('hidden')">
                                     Cancel
                                 </button>

@@ -9,20 +9,20 @@
         <div class="max-w-ful mx-auto sm:px-6 lg:px-8">
             <!-- Success Message -->
             @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
+            <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                {{ session('success') }}
+            </div>
             @endif
 
             <!-- Error Messages -->
             @if($errors->any())
-                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                    <ul class="list-disc list-inside">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
             @endif
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -35,22 +35,22 @@
                         <!-- Step 1: Select or Create Topic -->
                         <div id="step-1" class="mb-8">
                             <h4 class="text-lg font-semibold mb-4">Step 1: Choose a Topic</h4>
-                            
+
                             <!-- Topic Selection Options -->
                             <div class="space-y-4">
                                 <!-- Option 1: Select Existing Topic -->
                                 <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                                    <input type="radio" name="topic_option" value="existing" checked 
-                                           class="mt-1 mr-3" 
-                                           onchange="toggleTopicInputs('existing')">
+                                    <input type="radio" name="topic_option" value="existing" checked
+                                        class="mt-1 mr-3"
+                                        onchange="toggleTopicInputs('existing')">
                                     <div class="flex-1">
                                         <span class="font-medium text-gray-900">Select Existing Topic</span>
                                         <div id="existing-topic-select" class="mt-3">
-                                            <select name="topic_id" id="topic_id" 
-                                                    class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                            <select name="topic_id" id="topic_id"
+                                                class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                                 <option value="">-- Choose a Topic --</option>
                                                 @foreach($topics as $topic)
-                                                    <option value="{{ $topic->id }}">{{ $topic->name }}</option>
+                                                <option value="{{ $topic->id }}">{{ $topic->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -59,21 +59,21 @@
 
                                 <!-- Option 2: Create New Topic -->
                                 <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                                    <input type="radio" name="topic_option" value="new" 
-                                           class="mt-1 mr-3"
-                                           onchange="toggleTopicInputs('new')">
+                                    <input type="radio" name="topic_option" value="new"
+                                        class="mt-1 mr-3"
+                                        onchange="toggleTopicInputs('new')">
                                     <div class="flex-1">
                                         <span class="font-medium text-gray-900">Create New Topic</span>
                                         <div id="new-topic-inputs" class="mt-3 space-y-3 hidden">
                                             <div>
-                                                <input type="text" name="new_topic_name" id="new_topic_name" 
-                                                       placeholder="Enter new topic name"
-                                                       class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                                <input type="text" name="new_topic_name" id="new_topic_name"
+                                                    placeholder="Enter new topic name"
+                                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                             </div>
                                             <div>
-                                                <textarea name="new_topic_description" id="new_topic_description" 
-                                                          rows="2" placeholder="Topic description (optional)"
-                                                          class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                                <textarea name="new_topic_description" id="new_topic_description"
+                                                    rows="2" placeholder="Topic description (optional)"
+                                                    class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 min-h-[80px] resize-vertical focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -84,7 +84,7 @@
                             <div class="flex items-center gap-4 mt-4">
                                 <a href="{{ route('topics.index') }}" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</a>
                                 <button type="button" id="btn-next" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                         onclick="nextStep()">Next</button>
+                                    onclick="nextStep()">Next</button>
                             </div>
                         </div>
 
@@ -96,25 +96,26 @@
                                 <p class="text-lg text-gray-1000">Let's Create Quiz For "<span id="chosen-topic" class="font-semibold text-lg"></span>"</p>
                             </div>
                             <h4 class="text-lg font-semibold mb-4">Step 2: Quiz Details</h4>
-                            
+
                             <div class="space-y-4">
                                 <div>
                                     <label for="quiz_name" class="block text-sm font-medium mb-2">
                                         Quiz Name <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" id="quiz_name" name="name" required 
-                                           value="{{ old('name') }}"
-                                           class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                           placeholder="e.g., Basic Programming Quiz">
+                     <input type="text" id="quiz_name" name="name" required 
+                         value="{{ old('name') }}"
+                         class="w-full rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 box-border focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                         placeholder="e.g., Basic Programming Quiz">
                                 </div>
 
                                 <div>
                                     <label for="quiz_description" class="block text-sm font-medium mb-2">
                                         Description
                                     </label>
-                                    <textarea id="quiz_description" name="description" rows="3" 
-                                              class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                              placeholder="Describe what this quiz covers...">{{ old('description') }}</textarea>
+                                    <textarea id="quiz_description" name="description" rows="3"
+                                        class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 
+                                        shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                        placeholder="Describe what this quiz covers...">{{ old('description') }}</textarea>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
@@ -122,17 +123,17 @@
                                         <label for="total_marks" class="block text-sm font-medium mb-2">
                                             Total Marks
                                         </label>
-                                        <input type="number" id="total_marks" name="total_marks" step="0.01" 
-                                               value="{{ old('total_marks', 100) }}"
-                                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <input type="number" id="total_marks" name="total_marks" step="0.01"
+                                            value="{{ old('total_marks', 100) }}"
+                                            class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                     <div>
                                         <label for="pass_marks" class="block text-sm font-medium mb-2">
                                             Pass Marks
                                         </label>
-                                        <input type="number" id="pass_marks" name="pass_marks" step="0.01" 
-                                               value="{{ old('pass_marks', 40) }}"
-                                               class="w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                        <input type="number" id="pass_marks" name="pass_marks" step="0.01"
+                                            value="{{ old('pass_marks', 40) }}"
+                                            class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
                                 </div>
 
@@ -172,17 +173,16 @@
                                     </div>
                                 </div>
 
-                   
-                            
+
+
                             </div>
                             <!-- Step 2 actions -->
                             <div class="flex items-center gap-4 pt-4">
-                                <button type="button" id="btn-back" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50" onclick="goToStep(1)">Back</button>
-                                <button type="submit" 
-                                  class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                        > Create Quiz
+                                <a href="{{ route('quizzes.index') }}" class="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50">Cancel</a>
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"> Create Quiz
                                 </button>
-                          
+
                             </div>
                     </form>
                 </div>

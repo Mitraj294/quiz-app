@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
-    private const TEXT_SHORT_ANSWER = 'fill_the_blank';
+
     private const RULE_NULLABLE_STRING = 'nullable|string';
 
     public function create(Topic $topic)
@@ -19,7 +19,7 @@ class QuestionController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER
+            3 => 'fill_the_blank'
         ];
 
         return view('questions.create', compact('topic', 'questionTypes'));
@@ -43,7 +43,7 @@ class QuestionController extends Controller
         $typeMap = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER,
+            3 => 'fill_the_blank',
         ];
 
         $typeName = $typeMap[$data['question_type']] ?? 'Unknown';
@@ -128,7 +128,7 @@ class QuestionController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER
+            3 => 'fill_the_blank'
         ];
 
         $currentType = 1;
@@ -159,7 +159,7 @@ class QuestionController extends Controller
         $typeMap = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER,
+            3 => 'fill_the_blank',
         ];
 
         $typeName = $typeMap[$data['question_type']] ?? 'Unknown';

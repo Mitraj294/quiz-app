@@ -26,7 +26,7 @@ class QuizController extends Controller
     private const RULE_NULLABLE_BOOLEAN = 'nullable|boolean';
     private const RULE_REQUIRED_STRING_MAX255 = 'required|string|max:255';
     private const RULE_NULLABLE_DATE = 'nullable|date';
-    private const TEXT_SHORT_ANSWER = 'fill_the_blank';
+
 
     public function index()
     {
@@ -247,7 +247,7 @@ class QuizController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER,
+            3 => 'fill_the_blank',
         ];
 
         return view('quizzes.create_question', compact('quiz', 'questionTypes'));
@@ -266,7 +266,7 @@ class QuizController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER,
+            3 => 'fill_the_blank',
         ];
 
         // Map the vendor question_type name to numeric key
@@ -348,7 +348,7 @@ class QuizController extends Controller
         return [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => self::TEXT_SHORT_ANSWER,
+            3 => 'fill_the_blank',
         ][$type] ?? 'Unknown';
     }
 
@@ -401,7 +401,7 @@ class QuizController extends Controller
 
         // create the question using vendor model
         $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
-            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => self::TEXT_SHORT_ANSWER][$data['question_type']] ?? 'Unknown'
+            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => 'fill_the_blank'][$data['question_type']] ?? 'Unknown'
         ]);
 
         $question = \Harishdurga\LaravelQuiz\Models\Question::create([
