@@ -28,7 +28,7 @@
         @csrf
         <div>
             <label for="author_user" class="block text-sm font-medium mb-2">Select user</label>
-            <select id="author_user" name="user_id" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            <select id="author_user" name="user_id" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                 @foreach($users as $user)
                 <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                 @endforeach
@@ -36,7 +36,7 @@
         </div>
         <div>
             <label for="author_role" class="block text-sm font-medium mb-2">Role (optional)</label>
-            <input id="author_role" type="text" name="author_role" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="creator, editor, contributor">
+            <input id="author_role" type="text" name="author_role" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="creator, editor, contributor">
         </div>
         <div>
             <label class="inline-flex items-center">

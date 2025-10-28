@@ -88,6 +88,27 @@ class QuizController extends Controller
         }
 
         // Create quiz (store duration and time_between_attempts as minutes)
+        // Convert incoming local datetimes (from user's browser) to UTC before saving.
+        $tz = $request->input('timezone') ?? config('app.timezone');
+
+        $validFrom = null;
+        if (! empty($validated['valid_from'])) {
+            try {
+                $validFrom = \Carbon\Carbon::parse($validated['valid_from'], $tz)->setTimezone('UTC')->toDateTimeString();
+            } catch (\Exception $e) {
+                $validFrom = $validated['valid_from'];
+            }
+        }
+
+        $validUpto = null;
+        if (! empty($validated['valid_upto'])) {
+            try {
+                $validUpto = \Carbon\Carbon::parse($validated['valid_upto'], $tz)->setTimezone('UTC')->toDateTimeString();
+            } catch (\Exception $e) {
+                $validUpto = $validated['valid_upto'];
+            }
+        }
+
         $quiz = Quiz::create([
             'name' => $validated['name'],
             'slug' => $this->generateUniqueSlug($validated['name']),
@@ -100,8 +121,9 @@ class QuizController extends Controller
             'media_url' => $validated['media_url'] ?? null,
             'media_type' => $validated['media_type'] ?? null,
             'duration' => $validated['duration'] ?? 0,
-            'valid_from' => $validated['valid_from'] ?? now(),
-            'valid_upto' => $validated['valid_upto'] ?? null,
+            // if valid_from not provided, default to now() in UTC
+            'valid_from' => $validFrom ?? now()->setTimezone('UTC')->toDateTimeString(),
+            'valid_upto' => $validUpto ?? null,
             'time_between_attempts' => $validated['time_between_attempts'] ?? 0,
         ]);
 
@@ -143,6 +165,27 @@ class QuizController extends Controller
 
         $data = $request->validate($rules);
 
+        // If the browser provided a timezone, use it to convert incoming local datetimes to UTC
+        $tz = $request->input('timezone') ?? config('app.timezone');
+
+        $validFrom = null;
+        if (array_key_exists('valid_from', $data) && ! empty($data['valid_from'])) {
+            try {
+                $validFrom = \Carbon\Carbon::parse($data['valid_from'], $tz)->setTimezone('UTC')->toDateTimeString();
+            } catch (\Exception $e) {
+                $validFrom = $data['valid_from'];
+            }
+        }
+
+        $validUpto = null;
+        if (array_key_exists('valid_upto', $data) && ! empty($data['valid_upto'])) {
+            try {
+                $validUpto = \Carbon\Carbon::parse($data['valid_upto'], $tz)->setTimezone('UTC')->toDateTimeString();
+            } catch (\Exception $e) {
+                $validUpto = $data['valid_upto'];
+            }
+        }
+
         $quiz->update([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
@@ -151,8 +194,8 @@ class QuizController extends Controller
             'max_attempts' => $data['max_attempts'] ?? $quiz->max_attempts,
             'is_published' => isset($data['is_published']) ? (int)$data['is_published'] : $quiz->is_published,
             'duration' => $data['duration'] ?? $quiz->duration,
-            'valid_from' => $data['valid_from'] ?? $quiz->valid_from,
-            'valid_upto' => $data['valid_upto'] ?? $quiz->valid_upto,
+            'valid_from' => $validFrom ?? ($data['valid_from'] ?? $quiz->valid_from),
+            'valid_upto' => $validUpto ?? ($data['valid_upto'] ?? $quiz->valid_upto),
             'time_between_attempts' => $data['time_between_attempts'] ?? $quiz->time_between_attempts,
         ]);
 

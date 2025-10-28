@@ -17,13 +17,12 @@
                     <h4 class="text-sm font-semibold mb-2">Authors</h4>
                     <ul class="list-disc list-inside text-sm text-gray-700">
                         @foreach($quiz->authors as $author)
-                            <li>{{ $author->name }} @if($author->pivot->author_role) <small class="text-gray-500">({{ $author->pivot->author_role }})</small> @endif</li>
+                        <li>{{ $author->name }} @if($author->pivot->author_role) <small class="text-gray-500">({{ $author->pivot->author_role }})</small> @endif</li>
                         @endforeach
                     </ul>
                 </div>
                 @endif
 
-                <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     @php
                     // Compute counts and marks dynamically from attached quiz questions.
                     $totalQuestions = $quiz->questions->count();
@@ -35,7 +34,26 @@
                     $computedTotalMarks = $quiz->questions->sum('marks');
                     // Determine pass marks using business rule (one-third of total)
                     $computedPassMarks = (int) round($computedTotalMarks / 3);
+
+                    // Determine if quiz has expired based on valid_upto
+                    // Treat stored valid_from/valid_upto as UTC in DB and compare in UTC
+                    $now = \Carbon\Carbon::now('UTC');
+                    $isExpired = false;
+                    if (!empty($quiz->valid_upto)) {
+                        try {
+                            $validUpto = \Carbon\Carbon::parse($quiz->valid_upto, 'UTC');
+                            if ($now->gt($validUpto)) {
+                                $isExpired = true;
+                            }
+                        } catch (\Exception $e) {
+                            // ignore parse errors and treat as not expired
+                        }
+                    }
+
                     @endphp
+
+
+                    <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
 
                     <!-- Row 1: Questions -->
                     <div>
@@ -61,8 +79,20 @@
                         <p class="text-lg font-semibold">{{ $computedPassMarks }}</p>
                     </div>
                     <div>
-                        <!-- intentionally left empty for spacing -->
+                        <span class="text-sm text-gray-600">Duration</span>
+                        <p class="text-lg font-semibold">
+                            @if(!empty($quiz->duration))
+                                {{ $quiz->duration }} {{ $quiz->duration == 1 ? 'minute' : 'minutes' }}
+                            @elseif(!empty($quiz->duration_minutes))
+                                {{ $quiz->duration_minutes }} {{ $quiz->duration_minutes == 1 ? 'minute' : 'minutes' }}
+                            @elseif(!empty($quiz->duration_in_minutes))
+                                {{ $quiz->duration_in_minutes }} {{ $quiz->duration_in_minutes == 1 ? 'minute' : 'minutes' }}
+                            @else
+                                None
+                            @endif
+                        </p>
                     </div>
+
 
                     <!-- Row 3: Attempts and Status -->
                     <div>
@@ -82,31 +112,58 @@
                     @else
                     <div><!-- intentionally left empty for spacing --></div>
                     @endauth
-
+                    <div>
+                        <span class="text-sm text-gray-600">Time Between Attempts</span>
+                        <p class="text-lg font-semibold">
+                            @if($quiz->time_between_attempts)
+                            {{ $quiz->time_between_attempts }} {{ $quiz->time_between_attempts == 1 ? 'minute' : 'minutes' }}
+                            @else
+                            None
+                            @endif
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">Valid Upto</span>
+                        @php
+                            $validUptoUtc = $quiz->valid_upto ? \Carbon\Carbon::parse($quiz->valid_upto)->setTimezone('UTC')->toIso8601String() : '';
+                        @endphp
+                        <p id="valid-upto-display" class="text-lg font-semibold {{ isset($isExpired) && $isExpired ? 'text-red-700' : '' }}" data-utc="{{ $validUptoUtc }}">
+                            @if(!empty($quiz->valid_upto))
+                                <span class="no-js">{{ \Carbon\Carbon::parse($quiz->valid_upto)->toDayDateTimeString() }}</span>
+                            @else
+                                None
+                            @endif
+                        </p>
+                    </div>
+                    <div><!-- intentionally left empty for spacing --></div>
                     <div>
                         <span class="text-sm text-gray-600">Status</span>
                         <p class="text-lg font-semibold">
-                            @auth
-                            @if(Auth::user()->isAdmin())
-                            @if($quiz->is_published)
-                            <span class="text-green-600">Published</span>
+                            @if($isExpired)
+                                <span class="text-red-600">Expired</span>
                             @else
-                            <span class="text-yellow-600">Draft</span>
+                                @auth
+                                    @if(Auth::user()->isAdmin())
+                                        @if($quiz->is_published)
+                                            <span class="text-green-600">Published</span>
+                                        @else
+                                            <span class="text-yellow-600">Draft</span>
+                                        @endif
+                                    @else
+                                        @if($userAttempts > 0)
+                                            <span class="text-green-600">Submitted</span>
+                                        @else
+                                            <span class="text-gray-600">Yet To Attempt</span>
+                                        @endif
+                                    @endif
+                                @else
+                                    @if($quiz->is_published)
+                                        <span class="text-green-600">Published</span>
+                                    @else
+                                        <span class="text-yellow-600">Draft</span>
+                                    @endif
+                                @endauth
                             @endif
-                            @else
-                            @if($userAttempts > 0)
-                            <span class="text-green-600">Submitted</span>
-                            @else
-                            <span class="text-yellow-600">Yet To Attempt</span>
-                            @endif
-                            @endif
-                            @else
-                            @if($quiz->is_published)
-                            <span class="text-green-600">Published</span>
-                            @else
-                            <span class="text-yellow-600">Draft</span>
-                            @endif
-                            @endauth
                         </p>
                     </div>
                 </div>
@@ -163,24 +220,65 @@
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex-1 text-left">
                         @if($quiz->max_attempts && $attempts >= $quiz->max_attempts)
-                            <span class="text-sm font-semibold text-green-600">You've completed {{ $quiz->name }} quiz successfully. Thank you for participating.</span>
+                        <span class="text-sm font-semibold text-green-600">You've completed {{ $quiz->name }} quiz successfully. Thank you for participating.</span>
                         @else
-                            <span class="text-sm text-gray-700">You have attempted this quiz {{ $attempts }} {{ $attempts === 1 ? 'time' : 'times' }}.</span>
+                        <span class="text-sm text-gray-700">You have attempted this quiz {{ $attempts }} {{ $attempts === 1 ? 'time' : 'times' }}.</span>
                         @endif
                     </div>
                     @if($attempts > 0)
-                        <div class="flex-none">
-                            <a href="{{ route('quizzes.result_index', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 focus:outline-none border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest transition ease-in-out duration-150">
-                                See Result
-                            </a>
-                        </div>
+                    <div class="flex-none">
+                        <a href="{{ route('quizzes.result_index', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 focus:outline-none border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest transition ease-in-out duration-150">
+                            See Result
+                        </a>
+                    </div>
                     @endif
 
                     <div class="flex-none">
+                        @php
+                        $canRetake = true;
+                        $remainingSeconds = 0;
+                        if(auth()->check()) {
+                            $lastAttempt = \App\Models\Attempt::where('quiz_id', $quiz->id)
+                                ->where('user_id', auth()->id())
+                                ->whereNotNull('completed_at')
+                                ->orderByDesc('completed_at')
+                                ->first();
+
+                            if($quiz->time_between_attempts && $lastAttempt) {
+                                try {
+                                    // treat completed_at as UTC and compute lock until in UTC
+                                    $lockUntil = \Carbon\Carbon::parse($lastAttempt->completed_at, 'UTC')->addMinutes($quiz->time_between_attempts);
+                                    if($now->lt($lockUntil)) {
+                                        $canRetake = false;
+                                        $remainingSeconds = $now->diffInSeconds($lockUntil);
+                                    }
+                                } catch(\Exception $e) {
+                                    // ignore parse errors and allow retake
+                                }
+                            }
+                        }
+
+                        // If quiz has expired, disallow retake
+                        if(isset($isExpired) && $isExpired) {
+                            $canRetake = false;
+                        }
+                        @endphp
+
                         @if(!($quiz->max_attempts && $attempts >= $quiz->max_attempts))
-                            <a href="{{ route('quizzes.attempt', $quiz->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                Retake Quiz (Attempt {{ $attempts + 1 }})
-                            </a>
+                            @if(isset($isExpired) && $isExpired)
+                                <button disabled class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest" title="This quiz has expired">
+                                    Quiz Expired
+                                </button>
+                            @elseif($canRetake)
+                                <a id="retake-link" href="{{ route('quizzes.attempt', $quiz->id) }}" data-attempt-label="{{ 'Retake Quiz (Attempt ' . ($attempts + 1) . ')' }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Retake Quiz (Attempt {{ $attempts + 1 }})
+                                </a>
+                            @else
+                                <button id="retake-btn" disabled data-remaining-seconds="{{ $remainingSeconds }}" data-attempt-label="{{ 'Retake Quiz (Attempt ' . ($attempts + 1) . ')' }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Retake Quiz (Attempt {{ $attempts + 1 }})
+                                    <span id="retake-timer" class="ml-2 text-sm">(locked)</span>
+                                </button>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -351,3 +449,45 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('retake-btn');
+        if (!btn) return;
+
+        var remaining = parseInt(btn.getAttribute('data-remaining-seconds') || '0', 10);
+        var attemptUrl = "{{ route('quizzes.attempt', $quiz->id) }}";
+        var timerSpan = document.getElementById('retake-timer');
+
+        function formatTime(seconds) {
+            var m = Math.floor(seconds / 60);
+            var s = seconds % 60;
+            return m + ':' + (s < 10 ? '0' + s : s);
+        }
+
+        function tick() {
+            if (remaining <= 0) {
+                // replace button with link
+                var link = document.createElement('a');
+                link.href = attemptUrl;
+                link.id = 'retake-link';
+                link.className = 'inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150';
+                // Use the label from the original button's data attribute (avoid embedding blade var in JS)
+                var label = btn.dataset.attemptLabel || btn.getAttribute('data-attempt-label') || 'Retake Quiz';
+                link.innerText = label;
+                btn.parentNode.replaceChild(link, btn);
+                clearInterval(timer);
+                return;
+            }
+
+            if (timerSpan) {
+                timerSpan.textContent = '(' + formatTime(remaining) + ')';
+            }
+            remaining -= 1;
+        }
+
+        // initial tick to show time immediately
+        tick();
+        var timer = setInterval(tick, 1000);
+    });
+</script>

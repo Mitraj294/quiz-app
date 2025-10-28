@@ -47,7 +47,7 @@
                                     <div class="flex-1">
                                         <div>
                                             <select id="default_negative_marks_enabled"
-                                           class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                           class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                 onchange="toggleDefaultNegativeMarks(this.value)">
                                                 <option value="no">No</option>
                                                 <option value="yes">Yes</option>
@@ -55,7 +55,7 @@
                                         </div>
                                         <div class="mt-2">
                                             <select id="default_negative_marks" data-selected="{{ $defaultNegativeMarks ?? 0 }}"
-                                           class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 hidden">
+                                           class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 hidden">
                                      
                                             </select>
                                         </div>
@@ -171,7 +171,7 @@
                                                     <div class="flex flex-col flex-1 gap-2">
                                                                 <div>
                                                                     <select id="negative_enabled_{{ $question->id }}"
-                                                              class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm question-negative-enabled text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                              class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm question-negative-enabled text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                                         data-question-id="{{ $question->id }}"
                                                                         onchange="toggleQuestionNegativeMarks(this, this.value)">
                                                                         <option value="no" {{ !$hasNegativeMarks ? 'selected' : '' }}>No</option>
@@ -181,7 +181,7 @@
                                                                 <div class="mt-2">
                                                                     <select id="negative_marks_{{ $question->id }}"
                                                                         name="negative_marks[{{ $question->id }}]"
-                                                                            class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                                            class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm {{ $hasNegativeMarks ? '' : 'hidden' }} question-negative-marks text-sm h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                                         data-question-id="{{ $question->id }}" data-selected="{{ $defaultNegativeMarks }}">
                                                                         <!-- populated dynamically based on marks -->
                                                                     </select>

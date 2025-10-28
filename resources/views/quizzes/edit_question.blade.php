@@ -23,7 +23,7 @@
 
                     <div class="mb-4">
                         <label for="question_type" class="block text-sm font-medium mb-2">Question Type</label>
-                        <select name="question_type" id="question_type" onchange="onTypeChange()" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <select name="question_type" id="question_type" onchange="onTypeChange()" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             @foreach($questionTypes as $key => $label)
                                 <option value="{{ $key }}" {{ $currentType == $key ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $label)) }}</option>
                             @endforeach
@@ -32,7 +32,7 @@
 
                     <div class="mb-4">
                         <label for="question_text" class="block text-sm font-medium mb-2">Question Text</label>
-                        <textarea name="question_text" id="question_text" rows="3" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('question_text', $question->name ?? '') }}</textarea>
+                        <textarea name="question_text" id="question_text" rows="3" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('question_text', $question->name ?? '') }}</textarea>
                     </div>
 
                     <div class="mb-4">
@@ -83,23 +83,23 @@
 
                     <div id="text-answer" class="mb-4" style="display:none;">
                         <label for="text_answer_input" class="block text-sm font-medium mb-2">Answer (for Fill in the Blank)</label>
-                        <input type="text" name="text_answer" id="text_answer_input" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('text_answer', optional($question->correct_options()->first())->name ?? '') }}">
+                        <input type="text" name="text_answer" id="text_answer_input" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('text_answer', optional($question->correct_options()->first())->name ?? '') }}">
                     </div>
 
                     <div class="mb-4 grid grid-cols-3 gap-3">
                         <div>
                             <label for="marks" class="block text-sm font-medium mb-2">Marks</label>
-                            <input type="number" name="marks" id="marks" step="1" value="{{ old('marks', $quizQuestion->marks ?? 1) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <input type="number" name="marks" id="marks" step="1" value="{{ old('marks', $quizQuestion->marks ?? 1) }}" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="negative_marks" class="block text-sm font-medium mb-2">Negative Marks</label>
-                            <select name="negative_marks" id="negative_marks" data-selected="{{ old('negative_marks', $quizQuestion->negative_marks ?? 0) }}" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <select name="negative_marks" id="negative_marks" data-selected="{{ old('negative_marks', $quizQuestion->negative_marks ?? 0) }}" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                 <!-- populated dynamically -->
                             </select>
                         </div>
                         <div>
                             <label for="is_optional" class="block text-sm font-medium mb-2">Is Optional</label>
-                            <select name="is_optional" id="is_optional" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <select name="is_optional" id="is_optional" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                 <option value="0" {{ (old('is_optional', $quizQuestion->is_optional ?? 0) == 0) ? 'selected' : '' }}>No</option>
                                 <option value="1" {{ (old('is_optional', $quizQuestion->is_optional ?? 0) == 1) ? 'selected' : '' }}>Yes</option>
                             </select>
@@ -147,8 +147,8 @@
             div.innerHTML = `
                 <span class="w-6 text-sm font-medium">${labelForIndex(idx)}</span>
                 <input type="checkbox" name="correct[]" value="${idx}" class="correct-checkbox" ${checked ? 'checked' : ''}>
-                <input type="text" name="options[]" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
-                <button type="button" class="px-3 py-1 bg-gray-100 rounded" onclick="removeOptionField(this)" title="Remove option">Remove</button>
+                <input type="text" name="options[]" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Option ${idx+1}" value="${escapeHtml(value)}">
+                <button type="button" class="ml-2 text-red-500 hover:text-red-700 remove-option" onclick="removeOptionField(this)" title="Remove option">Remove</button>
             `;
             list.appendChild(div);
         }

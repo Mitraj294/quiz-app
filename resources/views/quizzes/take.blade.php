@@ -9,16 +9,82 @@
         <div class="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Quiz Info Card -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div>
+                <div class="flex flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h3 class="text-xl font-bold mb-4">{{ $quiz->name }}</h3>
                         <p class="text-gray-700 mb-4">{{ $quiz->description }}</p>
                     </div>
-                    <div></div>
+                    @if($quiz->duration > 0)
+                    @php
+                    // Compute remaining seconds: prefer attempt->ends_at if available (so reloads continue countdown)
+                    $remainingSeconds = $quiz->duration * 60;
+                    if (isset($attempt) && !empty($attempt->ends_at)) {
+                        $remainingSeconds = max(0, strtotime($attempt->ends_at) - time());
+                    }
+                    @endphp
+
+                    <div class="flex items-center justify-between mt-4 mb-4">
+                        <div>
+                            <span class="text-sm text-gray-600">Time Remaining</span>
+                            <div id="quiz-timer" data-seconds="{{ $remainingSeconds }}" class="text-xl font-semibold text-red-600">
+                                @if($remainingSeconds >= 3600)
+                                    {{ gmdate('H:i:s', $remainingSeconds) }}
+                                @else
+                                    {{ gmdate('i:s', $remainingSeconds) }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        var timerEl = document.getElementById('quiz-timer');
+                        if (!timerEl) return;
+
+                        var seconds = parseInt(timerEl.getAttribute('data-seconds'), 10) || 0;
+                        var form = document.getElementById('quiz-form');
+
+                        function pad(n) { return String(n).padStart(2, '0'); }
+                        function format(s) {
+                            var h = Math.floor(s / 3600);
+                            var m = Math.floor((s % 3600) / 60);
+                            var sec = s % 60;
+                            if (h > 0) return pad(h) + ':' + pad(m) + ':' + pad(sec);
+                            return pad(m) + ':' + pad(sec);
+                        }
+
+                        function submitOnce() {
+                            if (!form) return;
+                            if (!form.dataset.submitted) {
+                                form.dataset.submitted = '1';
+                                form.submit();
+                            }
+                        }
+
+                        // initialize display
+                        timerEl.textContent = format(seconds);
+
+                        // if time already up, submit immediately
+                        if (seconds <= 0) {
+                            submitOnce();
+                            return;
+                        }
+
+                        var interval = setInterval(function () {
+                            seconds--;
+                            timerEl.textContent = format(Math.max(0, seconds));
+                            if (seconds <= 0) {
+                                clearInterval(interval);
+                                submitOnce();
+                            }
+                        }, 1000);
+                    });
+                    </script>
+                    @endif
                 </div>
                 @php
-                    $computedTotalMarks = $quiz->questions->sum('marks');
-                    $computedPassMarks = (int) round($computedTotalMarks / 3);
+                $computedTotalMarks = $quiz->questions->sum('marks');
+                $computedPassMarks = (int) round($computedTotalMarks / 3);
                 @endphp
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -51,7 +117,7 @@
             <form method="POST" action="{{ route('quizzes.submit', $quiz->id) }}" id="quiz-form">
                 @csrf
                 @if(isset($attempt) && $attempt)
-                    <input type="hidden" name="attempt_id" value="{{ $attempt->id }}">
+                <input type="hidden" name="attempt_id" value="{{ $attempt->id }}">
                 @endif
 
                 <!-- Questions List -->
@@ -167,7 +233,7 @@
                     <!-- Submit Button -->
                     <div class="flex gap-4 mt-4">
                         <div>
-                            
+
                             <button
                                 type="submit"
                                 class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"

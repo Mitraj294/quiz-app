@@ -38,24 +38,38 @@ class AttemptController extends Controller
             }
         }
 
+        // Enforce cooldown between attempts if configured
+        if ($quiz->time_between_attempts && Auth::check()) {
+            $lastAttempt = Attempt::where('quiz_id', $quiz->id)
+                ->where('user_id', Auth::id())
+                ->whereNotNull('completed_at')
+                ->orderByDesc('completed_at')
+                ->first();
+
+            if ($lastAttempt) {
+                try {
+                    // Treat completed_at as UTC and compare using UTC now
+                    $lockUntil = \Carbon\Carbon::parse($lastAttempt->completed_at, 'UTC')->addMinutes($quiz->time_between_attempts);
+                    if (\Carbon\Carbon::now('UTC')->lt($lockUntil)) {
+                        $seconds = \Carbon\Carbon::now('UTC')->diffInSeconds($lockUntil);
+                        return redirect()->route('quizzes.show', $quiz->id)
+                            ->with('error', 'You must wait ' . gmdate('i:s', $seconds) . ' before attempting this quiz again.');
+                    }
+                } catch (\Exception $e) {
+                    // ignore and allow attempt
+                }
+            }
+        }
+
         // Prefer `quizzes.take` view if present; otherwise fallback to `quizzes.attempt`.
         $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
 
-        // Find an existing in-progress attempt (no completed_at) for this user and quiz
+        // Find an existing in-progress attempt (no completed_at) for this user and quiz.
+        // Do NOT create a new Attempt record here — creation should happen on submit.
         $attempt = Attempt::where('quiz_id', $quiz->id)
             ->where('user_id', Auth::id())
             ->whereNull('completed_at')
             ->first();
-
-        if (! $attempt) {
-            $attempt = Attempt::create([
-                'user_id' => Auth::id(),
-                'quiz_id' => $quiz->id,
-                'score' => 0.00,
-                'passed' => 0,
-                'completed_at' => null,
-            ]);
-        }
 
         return view($viewName, compact('quiz', 'attempt'));
     }
