@@ -36,7 +36,7 @@
                             <div class="space-y-3">
                                 <div class="flex items-center gap-3">
                                     <label for="default_marks" class="text-sm font-medium w-36">Marks</label>
-                                    <input type="number" id="default_marks" step="0.01" value="1"
+                                    <input type="number" id="default_marks" step="1" value="1"
                                     class="flex-1 rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         onchange="applyToAll('marks', this.value); updateDefaultNegativeOptions();">
                                 </div>
@@ -160,7 +160,7 @@
                                                         id="marks_{{ $question->id }}"
                                                         name="marks[{{ $question->id }}]"
                                                         value="{{ $defaultMarks }}"
-                                                        step="0.01"
+                                                        step="1"
                                                         class="rounded-md border-gray-300 bg-white px-3 shadow-sm question-marks text-sm py-2 h-9 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                         data-question-id="{{ $question->id }}">
                                                 </div>

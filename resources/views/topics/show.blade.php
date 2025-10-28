@@ -154,12 +154,12 @@
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label for="total_marks" class="block text-sm font-medium mb-2">Total Marks</label>
-                                    <input type="number" id="total_marks" name="total_marks" step="0.01" value="100"
+                                    <input type="number" id="total_marks" name="total_marks" step="1" value="100"
                                         class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label for="pass_marks" class="block text-sm font-medium mb-2">Pass Marks</label>
-                                    <input type="number" id="pass_marks" name="pass_marks" step="0.01" value="40"
+                                    <input type="number" id="pass_marks" name="pass_marks" step="1" value="40"
                                         class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                             </div>

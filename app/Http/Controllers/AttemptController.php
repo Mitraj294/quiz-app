@@ -123,7 +123,8 @@ class AttemptController extends Controller
                 'attempt_id' => $attempt->id,
             ]);
 
-            return redirect()->route('quizzes.index')
+            // Redirect to the quiz's show page so the user sees the quiz details/result
+            return redirect()->route('quizzes.show', $quiz->id)
                 ->with('success', 'Thank you! Your quiz has been submitted successfully. (Attempt ID: ' . $attempt->id . ')');
         } catch (\Exception $e) {
             DB::rollBack();

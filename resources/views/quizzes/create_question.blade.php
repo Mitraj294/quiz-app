@@ -101,7 +101,7 @@
                     <div class="mb-4 grid grid-cols-3 gap-3">
                         <div>
                             <label for="marks" class="block text-sm font-medium mb-2">Marks</label>
-                            <input type="number" name="marks" id="marks" step="0.01" value="1" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <input type="number" name="marks" id="marks" step="1" value="1" class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         </div>
                         <div>
                             <label for="negative_marks" class="block text-sm font-medium mb-2">Negative Marks</label>

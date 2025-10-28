@@ -16,14 +16,19 @@
                     </div>
                     <div></div>
                 </div>
+                @php
+                    $computedTotalMarks = $quiz->questions->sum('marks');
+                    $computedPassMarks = (int) round($computedTotalMarks / 3);
+                @endphp
+
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     <div>
                         <span class="text-sm text-gray-600">Total Marks</span>
-                        <p class="text-lg font-semibold">{{ $quiz->total_marks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedTotalMarks }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Pass Marks</span>
-                        <p class="text-lg font-semibold">{{ $quiz->pass_marks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedPassMarks }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Total Questions</span>
@@ -161,19 +166,17 @@
 
                     <!-- Submit Button -->
                     <div class="flex gap-4 mt-4">
-                        <div><button
-                            type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                            onclick="return confirm('Are you sure you want to submit your quiz? You cannot change your answers after submission.');">
-                            Submit Quiz
-                        </button>
+                        <div>
+                            
+                            <button
+                                type="submit"
+                                class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                onclick="return confirm('Are you sure you want to submit your quiz? You cannot change your answers after submission.');">
+                                Submit Quiz
+                            </button>
                         </div>
-                        
-                            <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
 
-                      
-                      
-                        </div>
+                        <a href="{{ route('quizzes.show', $quiz->id) }}" class="px-4 py-2 text-gray-700">Cancel</a>
                     </div>
                 </div>
             </form>

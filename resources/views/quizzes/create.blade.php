@@ -123,7 +123,7 @@
                                         <label for="total_marks" class="block text-sm font-medium mb-2">
                                             Total Marks
                                         </label>
-                                        <input type="number" id="total_marks" name="total_marks" step="0.01"
+                                        <input type="number" id="total_marks" name="total_marks" step="1"
                                             value="{{ old('total_marks', 100) }}"
                                             class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>
@@ -131,7 +131,7 @@
                                         <label for="pass_marks" class="block text-sm font-medium mb-2">
                                             Pass Marks
                                         </label>
-                                        <input type="number" id="pass_marks" name="pass_marks" step="0.01"
+                                        <input type="number" id="pass_marks" name="pass_marks" step="1"
                                             value="{{ old('pass_marks', 40) }}"
                                             class="w-full max-w-[98%] mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </div>

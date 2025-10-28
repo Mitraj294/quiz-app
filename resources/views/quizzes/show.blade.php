@@ -25,10 +25,16 @@
 
                 <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     @php
+                    // Compute counts and marks dynamically from attached quiz questions.
                     $totalQuestions = $quiz->questions->count();
                     $mandatoryCount = $quiz->questions->where('is_optional', false)->count();
                     $optionalCount = $quiz->questions->where('is_optional', true)->count();
                     $userAttempts = auth()->check() ? $quiz->attemptsCountForUser(auth()->id()) : 0;
+
+                    // Compute total marks from quiz_questions marks field and always display computed values.
+                    $computedTotalMarks = $quiz->questions->sum('marks');
+                    // Determine pass marks using business rule (one-third of total)
+                    $computedPassMarks = (int) round($computedTotalMarks / 3);
                     @endphp
 
                     <!-- Row 1: Questions -->
@@ -48,11 +54,11 @@
                     <!-- Row 2: Marks (two cells) + empty -->
                     <div>
                         <span class="text-sm text-gray-600">Total Marks</span>
-                        <p class="text-lg font-semibold">{{ $quiz->total_marks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedTotalMarks }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Pass Marks</span>
-                        <p class="text-lg font-semibold">{{ $quiz->pass_marks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedPassMarks }}</p>
                     </div>
                     <div>
                         <!-- intentionally left empty for spacing -->

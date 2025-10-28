@@ -3,17 +3,24 @@
 
     <div class="space-y-4">
         @foreach($quizzes as $quiz)
-        @php
-        // derive some values with sensible fallbacks
-        $totalQuestions = $quiz->questions_count ?? 0;
-        // assume mandatory/optional data not present; show placeholders or calculate if available
-        $mandatory = $quiz->mandatory_questions_count ?? ($totalQuestions > 0 ? $totalQuestions - 1 : 0);
-        $optional = $quiz->optional_questions_count ?? ($totalQuestions > 0 ? 1 : 0);
-        $totalMarks = $quiz->total_marks ?? 0;
-        $passMarks = $quiz->pass_marks ?? 0;
-        $maxAttempts = $quiz->max_attempts ?? ($quiz->attempts_count > 0 ? $quiz->attempts_count : 1);
-        $statusLabel = ($quiz->published ?? false) ? '<span class="text-green-600">Published</span>' : '<span class="text-gray-600">Draft</span>';
-        @endphp
+    @php
+    // derive some values with sensible fallbacks
+    $totalQuestions = $quiz->questions_count ?? 0;
+    // assume mandatory/optional data not present; show placeholders or calculate if available
+    $mandatory = $quiz->mandatory_questions_count ?? ($totalQuestions > 0 ? $totalQuestions - 1 : 0);
+    $optional = $quiz->optional_questions_count ?? ($totalQuestions > 0 ? 1 : 0);
+
+    // Compute total marks from quiz_questions and always display computed totals
+    $computedTotalMarks = \DB::table('quiz_questions')->where('quiz_id', $quiz->id)->sum('marks');
+    $totalMarks = $computedTotalMarks;
+
+    // Compute pass marks using one-third rule of computed total
+    $computedPassMarks = (int) round($computedTotalMarks / 3);
+    $passMarks = $computedPassMarks;
+
+    $maxAttempts = $quiz->max_attempts ?? ($quiz->attempts_count > 0 ? $quiz->attempts_count : 1);
+    $statusLabel = ($quiz->published ?? false) ? '<span class="text-green-600">Published</span>' : '<span class="text-gray-600">Draft</span>';
+    @endphp
 
         <div class="bg-white shadow-sm sm:rounded-lg p-6 border border-gray-200">
             <div class="flex items-start justify-between">
