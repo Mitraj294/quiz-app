@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Quiz;
 use App\Models\Topic;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * QuizController
@@ -27,14 +29,23 @@ class QuizController extends Controller
     private const RULE_REQUIRED_STRING_MAX255 = 'required|string|max:255';
     private const RULE_NULLABLE_DATE = 'nullable|date';
 
-
-    public function index()
+    /**
+     * List all quizzes with their topics
+     *
+     * @return View
+     */
+    public function index(): View
     {
         $quizzes = Quiz::with('topics')->latest()->get();
         return view('quizzes.index', compact('quizzes'));
     }
 
-    public function create()
+    /**
+     * Show quiz creation form
+     *
+     * @return View
+     */
+    public function create(): View
     {
         $topics = Topic::orderBy('name')->get();
         return view('quizzes.create', compact('topics'));
@@ -42,8 +53,11 @@ class QuizController extends Controller
 
     /**
      * Store a new quiz.
+     *
+     * @param Request $request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         // Validation rules depend on topic_option
         $rules = [
@@ -136,8 +150,11 @@ class QuizController extends Controller
 
     /**
      * Show the quiz edit form to admins
+     *
+     * @param Quiz $quiz
+     * @return View
      */
-    public function edit(Quiz $quiz)
+    public function edit(Quiz $quiz): View
     {
         $topics = Topic::orderBy('name')->get();
         $users = \App\Models\User::orderBy('name')->get();
@@ -146,8 +163,12 @@ class QuizController extends Controller
 
     /**
      * Update quiz fields
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @return RedirectResponse
      */
-    public function update(Request $request, Quiz $quiz)
+    public function update(Request $request, Quiz $quiz): RedirectResponse
     {
         $rules = [
             'name' => self::RULE_REQUIRED_STRING_MAX255,
@@ -224,7 +245,13 @@ class QuizController extends Controller
 
     
 
-    public function show(Quiz $quiz)
+    /**
+     * Show quiz details with questions and topics
+     *
+     * @param Quiz $quiz
+     * @return View
+     */
+    public function show(Quiz $quiz): View
     {
         // Manually fetch topics for this quiz due to polymorphic namespace mismatch
         $topicIds = DB::table('topicables')
@@ -245,6 +272,9 @@ class QuizController extends Controller
     /**
      * Show a list of existing questions (from topics attached to this quiz)
      * so an admin can select and attach them to the quiz.
+     *
+     * @param Quiz $quiz
+     * @return View|RedirectResponse
      */
     public function selectQuestions(Quiz $quiz)
     {
@@ -284,8 +314,11 @@ class QuizController extends Controller
 
     /**
      * Show form to create a new question and attach it directly to the quiz.
+     *
+     * @param Quiz $quiz
+     * @return View
      */
-    public function createQuestion(Quiz $quiz)
+    public function createQuestion(Quiz $quiz): View
     {
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
@@ -298,8 +331,12 @@ class QuizController extends Controller
 
     /**
      * Show the edit form for a question within the quiz context (allows editing both question and quiz-specific settings)
+     *
+     * @param Quiz $quiz
+     * @param int $questionId
+     * @return View
      */
-    public function editQuestion(Quiz $quiz, $questionId)
+    public function editQuestion(Quiz $quiz, $questionId): View
     {
         $question = \Harishdurga\LaravelQuiz\Models\Question::with('options', 'question_type')->findOrFail($questionId);
 
@@ -329,8 +366,13 @@ class QuizController extends Controller
 
     /**
      * Update a question and its quiz-specific settings
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @param int $questionId
+     * @return RedirectResponse
      */
-    public function updateQuestion(Request $request, Quiz $quiz, $questionId)
+    public function updateQuestion(Request $request, Quiz $quiz, $questionId): RedirectResponse
     {
         $rules = [
             'question_type' => 'required|in:1,2,3',
@@ -424,8 +466,12 @@ class QuizController extends Controller
 
     /**
      * Store a new question and attach to both questions table and quiz_questions pivot.
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @return RedirectResponse
      */
-    public function storeQuestion(Request $request, Quiz $quiz)
+    public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
     {
         $data = $request->validate([
             'question_type' => 'required|in:1,2,3',
@@ -508,8 +554,12 @@ class QuizController extends Controller
     /**
      * Attach selected existing questions to the quiz with their settings.
      * Updates existing questions or creates new ones.
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @return RedirectResponse
      */
-    public function attachQuestions(Request $request, Quiz $quiz)
+    public function attachQuestions(Request $request, Quiz $quiz): RedirectResponse
     {
         Log::info('=== ATTACH QUESTIONS CALLED ===');
         Log::info('Quiz ID: ' . $quiz->id);
@@ -563,8 +613,12 @@ class QuizController extends Controller
 
     /**
      * Detach a question from the quiz (remove from quiz_questions pivot table only)
+     *
+     * @param Quiz $quiz
+     * @param int $questionId
+     * @return RedirectResponse
      */
-    public function detachQuestion(Quiz $quiz, $questionId)
+    public function detachQuestion(Quiz $quiz, $questionId): RedirectResponse
     {
         \App\Models\QuizQuestion::where('quiz_id', $quiz->id)
             ->where('question_id', $questionId)
@@ -573,7 +627,13 @@ class QuizController extends Controller
         return redirect()->back()->with('success', 'Question removed from quiz successfully');
     }
 
-    public function destroy(Quiz $quiz)
+    /**
+     * Delete a quiz
+     *
+     * @param Quiz $quiz
+     * @return RedirectResponse
+     */
+    public function destroy(Quiz $quiz): RedirectResponse
     {
         $topicId = optional($quiz->topics->first())->id;
         $quiz->delete();
@@ -589,8 +649,12 @@ class QuizController extends Controller
 
     /**
      * Toggle publish state for a quiz (admin only).
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @return RedirectResponse
      */
-    public function publish(Request $request, Quiz $quiz)
+    public function publish(Request $request, Quiz $quiz): RedirectResponse
     {
         // Toggle the boolean state
         $quiz->is_published = !$quiz->is_published;
@@ -624,6 +688,9 @@ class QuizController extends Controller
 
     /**
      * Show a paginated list of attempts for the current user for this quiz.
+     *
+     * @param Quiz $quiz
+     * @return View|RedirectResponse
      */
     public function resultIndex(Quiz $quiz)
     {
@@ -640,4 +707,3 @@ class QuizController extends Controller
         return view('quizzes.result_index', compact('quiz', 'attempts'));
     }
 }
-

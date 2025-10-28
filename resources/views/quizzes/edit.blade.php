@@ -4,23 +4,14 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-ful mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                @if($errors->any())
-                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                        <ul class="list-disc list-inside">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                <x-flash-messages />
 
                 <form method="POST" action="{{ route('quizzes.update', $quiz->id) }}">
                     @csrf
                     @method('PUT')
-                    <input type="hidden" name="timezone" id="timezone">
-                    <input type="hidden" id="server-tz" value="{{ config('app.timezone') }}">
+                    <x-timezone-handler />
 
                     <div class="mb-4">
                         <label for="name" class="block text-sm font-medium mb-2">Quiz Name</label>
@@ -103,49 +94,6 @@
             </div>
         </div>
     </div>
+
+    <x-utc-converter />
 </x-app-layout>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // populate timezone hidden input
-        try {
-            var tz = (Intl && Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions) ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
-            if (!tz) {
-                var st = document.getElementById('server-tz');
-                tz = st ? st.value : 'UTC';
-            }
-            var tzInput = document.getElementById('timezone');
-            if (tzInput) tzInput.value = tz;
-        } catch (e) {
-            // ignore
-        }
-
-        // Helper to format a Date to yyyy-MM-ddTHH:mm for datetime-local
-        function toLocalDateTimeInputValue(date) {
-            var yr = date.getFullYear();
-            var mo = String(date.getMonth() + 1).padStart(2, '0');
-            var da = String(date.getDate()).padStart(2, '0');
-            var hr = String(date.getHours()).padStart(2, '0');
-            var mi = String(date.getMinutes()).padStart(2, '0');
-            return yr + '-' + mo + '-' + da + 'T' + hr + ':' + mi;
-        }
-
-        // Convert any inputs with data-utc attribute into local datetime-local values
-        ['valid_from', 'valid_upto'].forEach(function(id) {
-            var inp = document.getElementById(id);
-            if (!inp) return;
-            // if user had old input (validation error) we should not override
-            if (inp.value && inp.value.length) return;
-            var utc = inp.getAttribute('data-utc');
-            if (!utc) return;
-            try {
-                var d = new Date(utc); // utc parsing
-                if (!isNaN(d.getTime())) {
-                    inp.value = toLocalDateTimeInputValue(d);
-                }
-            } catch (e) {
-                // ignore
-            }
-        });
-    });
-</script>

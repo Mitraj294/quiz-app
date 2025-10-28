@@ -10,11 +10,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
+/**
+ * AttemptController
+ * 
+ * Handles quiz attempt lifecycle: start, submit, and view results.
+ */
 class AttemptController extends Controller
 {
     /**
      * Show the quiz-taking page for users
+     *
+     * @param Quiz $quiz
+     * @return View|RedirectResponse
      */
     public function start(Quiz $quiz)
     {
@@ -79,8 +89,12 @@ class AttemptController extends Controller
 
     /**
      * Submit quiz attempt and calculate score
+     *
+     * @param Request $request
+     * @param Quiz $quiz
+     * @return RedirectResponse
      */
-    public function submit(Request $request, Quiz $quiz)
+    public function submit(Request $request, Quiz $quiz): RedirectResponse
     {
         $request->validate([
             'answers' => 'nullable|array',
@@ -156,6 +170,10 @@ class AttemptController extends Controller
 
     /**
      * Show a detailed result for a specific attempt.
+     *
+     * @param Quiz $quiz
+     * @param Attempt $attempt
+     * @return View|RedirectResponse
      */
     public function show(Quiz $quiz, \App\Models\Attempt $attempt)
     {
