@@ -47,6 +47,11 @@
                     $userText = $qAnswers->pluck('answer_text')->filter()->first();
                     $correctOptions = $question->options->where('is_correct', 1)->pluck('id')->all();
 
+                    $marks = floatval($quizQuestion->marks ?? 0);
+                    $neg = floatval($quizQuestion->negative_marks ?? 0);
+                    $negSettings = $quiz->negative_marking_settings ?? [];
+                    $negEnabled = $negSettings['enable_negative_marks'] ?? true;
+
                     // fill-in-the-blank specifics
                     $isBlank = $question->question_type && $question->question_type->name === 'fill_the_blank';
                     if ($isBlank) {
@@ -66,15 +71,39 @@
                     $answerLabel = $submitted === '' ? 'No answer' : $submitted;
                     }
 
-                    // determine answer presence & correctness
+                    // Calculate earned marks using the same logic as controller
                     if ($isBlank) {
-                    $hasAnswer = trim((string)($userText ?? '')) !== '';
-                    $isQuestionCorrect = $isBlankCorrect ?? false;
+                        $hasAnswer = trim((string)($userText ?? '')) !== '';
+                        $isQuestionCorrect = $isBlankCorrect ?? false;
+                        
+                        if ($isQuestionCorrect) {
+                            $earnedMarks = $marks;
+                        } elseif ($negEnabled && $neg > 0 && $hasAnswer) {
+                            $earnedMarks = -1.0 * $neg;
+                        } else {
+                            $earnedMarks = 0.0;
+                        }
                     } else {
-                    $hasAnswer = !empty($selectedOptionIds);
-                    $sel = $selectedOptionIds ?? [];
-                    $corr = $correctOptions ?? [];
-                    $isQuestionCorrect = $hasAnswer && empty(array_diff($sel, $corr)) && empty(array_diff($corr, $sel));
+                        $hasAnswer = !empty($selectedOptionIds);
+                        $sel = $selectedOptionIds ?? [];
+                        $corr = $correctOptions ?? [];
+                        $isQuestionCorrect = $hasAnswer && empty(array_diff($sel, $corr)) && empty(array_diff($corr, $sel));
+                        
+                        // MCQ scoring - proportional partial marking
+                        $correctCount = count($corr);
+                        $selectedCorrect = count(array_intersect($corr, $sel));
+                        $selectedIncorrect = max(0, count($sel) - $selectedCorrect);
+                        
+                        if ($correctCount === 0) {
+                            $earnedMarks = 0.0;
+                        } else {
+                            $proportion = $selectedCorrect / $correctCount;
+                            $earnedMarks = $proportion * $marks;
+                            
+                            if ($negEnabled && $selectedIncorrect > 0 && $neg > 0) {
+                                $earnedMarks -= ($neg * $selectedIncorrect);
+                            }
+                        }
                     }
 
                     $boxClass = $stateBoxClass($hasAnswer, $isQuestionCorrect);
@@ -169,15 +198,38 @@
                                 </div>
 
                                 <div class="{{ $boxClass }}">
-                                    @if($isQuestionCorrect)
-                                    <div class="text-sm text-green-700 font-semibold">Marks: {{ $quizQuestion->marks }}</div>
-                                    @elseif($hasAnswer && ! $isQuestionCorrect)
-                                    <div class="text-sm text-red-700 font-semibold">Marks: -{{ $quizQuestion->negative_marks }}</div>
-                                    @else
-                                    <div class="text-sm text-gray-700 font-semibold">Marks: 0</div>
-                                    @endif
+                                    @php
+                                    $earnedRounded = round($earnedMarks, 2);
+                                    
+                                    // Determine status label
+                                    if (!$hasAnswer) {
+                                        $statusLabel = 'Not answered';
+                                    } elseif ($isQuestionCorrect) {
+                                        $statusLabel = 'Correct';
+                                    } else {
+                                        // Check if partial credit was given
+                                        if ($earnedRounded > 0) {
+                                            $statusLabel = 'Partial';
+                                        } else {
+                                            $statusLabel = 'Wrong';
+                                        }
+                                    }
+                                    
+                                    // Determine color class
+                                    if ($earnedRounded > 0) {
+                                        $marksColorClass = 'text-green-700';
+                                    } elseif ($earnedRounded < 0) {
+                                        $marksColorClass = 'text-red-700';
+                                    } else {
+                                        $marksColorClass = 'text-gray-700';
+                                    }
+                                    @endphp
+                                    
+                                    <div class="text-sm font-semibold {{ $marksColorClass }}">
+                                        Earned: {{ $earnedRounded >= 0 ? '+' : '' }}{{ $earnedRounded }}
+                                    </div>
                                     <div class="text-sm mt-2 font-semibold">
-                                        {{ !$hasAnswer ? 'Not answered' : ($isQuestionCorrect ? 'Correct' : 'Wrong') }}
+                                        {{ $statusLabel }}
                                     </div>
                                 </div>
                             </div>
