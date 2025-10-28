@@ -1,0 +1,7 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+  // Keep built-in CSS validation but ignore Tailwind-style at-rules which are handled by PostCSS/Tailwind
+  "css.validate": true
+}
