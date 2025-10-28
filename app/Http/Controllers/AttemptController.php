@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attempt;
 use App\Models\AttemptAnswer;
 use App\Models\Quiz;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,16 +18,16 @@ class AttemptController extends Controller
      */
     public function start(Quiz $quiz)
     {
-        // Eager load questions with options, question_type, and pivot data
+        // Eager load questions with related data
         $quiz->load(['questions.question.options', 'questions.question.question_type']);
 
-        // Check if quiz has questions
-        if ($quiz->questions->count() === 0) {
+        // If no questions, redirect back
+        if ($quiz->questions->isEmpty()) {
             return redirect()->route('quizzes.show', $quiz->id)
                 ->with('error', 'This quiz has no questions yet.');
         }
 
-        // Check if user has reached max attempts
+        // Check max attempts per user
         if ($quiz->max_attempts > 0) {
             $attemptCount = Attempt::where('quiz_id', $quiz->id)
                 ->where('user_id', Auth::id())
@@ -34,7 +35,7 @@ class AttemptController extends Controller
 
             if ($attemptCount >= $quiz->max_attempts) {
                 return redirect()->route('quizzes.index')
-                    ->with('error', ' You have already attempted this quiz. You can only attempt this quiz ' . $quiz->max_attempts . ' time(s). Please try other quizzes.');
+                    ->with('error', 'You have already attempted this quiz. You can only attempt this quiz ' . $quiz->max_attempts . ' time(s). Please try other quizzes.');
             }
         }
 
@@ -49,9 +50,12 @@ class AttemptController extends Controller
             if ($lastAttempt) {
                 try {
                     // Treat completed_at as UTC and compare using UTC now
-                    $lockUntil = \Carbon\Carbon::parse($lastAttempt->completed_at, 'UTC')->addMinutes($quiz->time_between_attempts);
-                    if (\Carbon\Carbon::now('UTC')->lt($lockUntil)) {
-                        $seconds = \Carbon\Carbon::now('UTC')->diffInSeconds($lockUntil);
+                    $lockUntil = Carbon::parse($lastAttempt->completed_at, 'UTC')
+                        ->addMinutes($quiz->time_between_attempts);
+
+                    if (Carbon::now('UTC')->lt($lockUntil)) {
+                        $seconds = Carbon::now('UTC')->diffInSeconds($lockUntil);
+
                         return redirect()->route('quizzes.show', $quiz->id)
                             ->with('error', 'You must wait ' . gmdate('i:s', $seconds) . ' before attempting this quiz again.');
                     }
@@ -61,11 +65,10 @@ class AttemptController extends Controller
             }
         }
 
-        // Prefer `quizzes.take` view if present; otherwise fallback to `quizzes.attempt`.
+        // Choose view
         $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
 
-        // Find an existing in-progress attempt (no completed_at) for this user and quiz.
-        // Do NOT create a new Attempt record here — creation should happen on submit.
+        // Find open (in-progress) attempt if any
         $attempt = Attempt::where('quiz_id', $quiz->id)
             ->where('user_id', Auth::id())
             ->whereNull('completed_at')
@@ -88,8 +91,9 @@ class AttemptController extends Controller
         $answers = $request->input('answers', []);
 
         DB::beginTransaction();
+
         try {
-            // Load questions with relationships
+            // Ensure necessary relations are loaded
             $quiz->load(['questions.question.options', 'questions.question.question_type']);
 
             Log::info('Submitting quiz attempt', [
@@ -97,7 +101,6 @@ class AttemptController extends Controller
                 'quiz_id' => $quiz->id,
                 'request_answers_count' => is_array($answers) ? count($answers) : 0,
             ]);
-
 
             // Use provided attempt if available (created when user clicked Start)
             $attemptId = $request->input('attempt_id');
@@ -108,42 +111,40 @@ class AttemptController extends Controller
                     ->first();
             }
 
-            // If an attempt was not provided or not found, create a new one
+            // Create attempt if not found
             if (empty($attempt)) {
                 $attempt = Attempt::create([
                     'user_id' => $user->id,
                     'quiz_id' => $quiz->id,
                     'score' => 0.00,
                     'passed' => 0,
-                    // completed_at will be set below when submission finishes
                     'completed_at' => null,
                 ]);
             }
 
-            // Mark attempt as completed now (submission time)
-            $attempt->completed_at = now();
+            // Mark attempt completed now (submission time)
+            $attempt->completed_at = Carbon::now('UTC');
             $attempt->save();
 
             Log::info('Created attempt record', ['attempt_id' => $attempt->id]);
 
-            // Process answers and calculate total score in helper (helper persists attempt)
+            // Calculate and persist score
             $this->processAttemptAndCalculateScore($quiz, $attempt, $answers);
 
             DB::commit();
 
-            Log::info('Quiz attempt submitted (no scoring)', [
+            Log::info('Quiz attempt submitted', [
                 'user_id' => $user->id,
                 'quiz_id' => $quiz->id,
                 'attempt_id' => $attempt->id,
             ]);
 
-            // Redirect to the quiz's show page so the user sees the quiz details/result
             return redirect()->route('quizzes.show', $quiz->id)
                 ->with('success', 'Thank you! Your quiz has been submitted successfully. (Attempt ID: ' . $attempt->id . ')');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Quiz submission failed', [
-                'user_id' => $user->id,
+                'user_id' => optional($user)->id,
                 'quiz_id' => $quiz->id,
                 'error' => $e->getMessage(),
             ]);
@@ -229,10 +230,18 @@ class AttemptController extends Controller
             'option_id' => null,
             'answer_text' => $userAnswer,
         ]);
+        $correctAnswers = $question->options
+            ->where('is_correct', 1)
+            ->pluck('option')
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->values()
+            ->all();
 
-        $correctAnswers = $question->options->where('is_correct', 1)->pluck('option')->map(fn($v) => trim((string)$v))->filter()->values()->all();
-        $submitted = trim((string)($userAnswer ?? ''));
-        $isCorrect = ($submitted !== '') && collect($correctAnswers)->map(fn($v) => strtolower($v))->contains(strtolower($submitted));
+        $submitted = trim((string) ($userAnswer ?? ''));
+        $isCorrect = ($submitted !== '') && collect($correctAnswers)
+            ->map(fn ($v) => strtolower($v))
+            ->contains(strtolower($submitted));
 
         if ($isCorrect) {
             $earned = $marks;
@@ -242,7 +251,12 @@ class AttemptController extends Controller
             $earned = 0.0;
         }
 
-        Log::info('Saved fill-in answer', ['attempt_id' => $attempt->id, 'question_id' => $questionId, 'answer_text' => $userAnswer, 'earned' => $earned]);
+        Log::info('Saved fill-in answer', [
+            'attempt_id' => $attempt->id,
+            'question_id' => $questionId,
+            'answer_text' => $userAnswer,
+            'earned' => $earned,
+        ]);
 
         return $earned;
     }
@@ -265,7 +279,7 @@ class AttemptController extends Controller
             $selected = [];
         }
 
-        if (count($selected) > 0) {
+        if (! empty($selected)) {
             foreach ($selected as $optionId) {
                 $opt = $question->options->firstWhere('id', $optionId);
 
@@ -273,14 +287,19 @@ class AttemptController extends Controller
                     'quiz_attempt_id' => $attempt->id,
                     'question_id' => $questionId,
                     'option_id' => $optionId,
-                    'answer_text' => $opt ? trim((string)$opt->option) : '',
+                    'answer_text' => $opt ? trim((string) $opt->option) : '',
                 ]);
             }
         } else {
             Log::info('No answer provided for question', ['attempt_id' => $attempt->id, 'question_id' => $questionId]);
         }
 
-        $correctOptionIds = $question->options->where('is_correct', 1)->pluck('id')->map(fn($v) => intval($v))->all();
+        $correctOptionIds = $question->options
+            ->where('is_correct', 1)
+            ->pluck('id')
+            ->map(fn ($v) => intval($v))
+            ->all();
+
         $correctCount = count($correctOptionIds);
         $selectedCorrect = count(array_intersect($correctOptionIds, $selected));
         $selectedIncorrect = max(0, count($selected) - $selectedCorrect);
@@ -296,7 +315,12 @@ class AttemptController extends Controller
             }
         }
 
-        Log::info('Saved MCQ answer', ['attempt_id' => $attempt->id, 'question_id' => $questionId, 'selected' => $selected, 'earned' => $earned]);
+        Log::info('Saved MCQ answer', [
+            'attempt_id' => $attempt->id,
+            'question_id' => $questionId,
+            'selected' => $selected,
+            'earned' => $earned,
+        ]);
 
         return $earned;
     }

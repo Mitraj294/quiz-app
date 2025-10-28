@@ -8,19 +8,32 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class TopicController extends Controller
 {
-    public function index()
+    /**
+     * List top-level topics
+     *
+     * @return View
+     */
+    public function index(): View
     {
-        // Only top-level topics (exclude sub-topics)
         $topics = Topic::whereNull('parent_id')->orderBy('name')->get();
+
         return view('topics.index', [
             'topics' => $topics,
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Store a new topic or sub-topic
+    *
+    * @param Request $request
+    * @return RedirectResponse
+    */
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -30,10 +43,9 @@ class TopicController extends Controller
         ]);
 
         $data['slug'] = Str::slug($data['name']);
-
         $topic = Topic::create($data);
 
-        if (!$topic) {
+        if (! $topic) {
             return back()->withInput()->withErrors(['error' => 'Failed to create topic. Please try again.']);
         }
 
@@ -50,36 +62,36 @@ class TopicController extends Controller
         return redirect()->route('topics.index')->with('success', 'Topic created successfully!');
     }
 
-    public function show(Topic $topic)
+    /**
+     * Show a topic and its quizzes
+    *
+    * @param Topic $topic
+    * @return View
+    */
+    public function show(Topic $topic): View
     {
-        // Load questions
         $topic->load('questions');
 
         // Manually fetch quizzes due to polymorphic namespace mismatch
         $quizIds = DB::table('topicables')
             ->where('topic_id', $topic->id)
-            ->whereIn('topicable_type', ['App\Models\Quiz', 'Harishdurga\LaravelQuiz\Models\Quiz'])
+            ->whereIn('topicable_type', ['App\\Models\\Quiz', 'Harishdurga\\LaravelQuiz\\Models\\Quiz'])
             ->pluck('topicable_id');
 
-        // Load quizzes based on user role
-    /** @var User|null $user */
-    $user = Auth::user();
+        /** @var User|null $user */
+        $user = Auth::user();
 
-    // Ensure analyzer and runtime know $user is the app User model before calling isAdmin()
-    if ($user instanceof User && $user->isAdmin()) {
-            // Admins see all quizzes (including drafts)
+        if ($user instanceof User && $user->isAdmin()) {
             $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
                 ->with('questions')
                 ->get();
         } else {
-            // Regular users see only published quizzes
             $quizzes = \App\Models\Quiz::whereIn('id', $quizIds)
                 ->where('is_published', 1)
                 ->with('questions')
                 ->get();
         }
 
-        // Attach quizzes collection to topic for view compatibility
         $topic->setRelation('quizzes', $quizzes);
 
         return view('topics.show', [
@@ -89,8 +101,11 @@ class TopicController extends Controller
 
     /**
      * Show edit form for the topic (admin only)
+     *
+     * @param Topic $topic
+     * @return View
      */
-    public function edit(Topic $topic)
+    public function edit(Topic $topic): View
     {
         return view('topics.edit', [
             'topic' => $topic,
@@ -99,8 +114,12 @@ class TopicController extends Controller
 
     /**
      * Update the topic
-     */
-    public function update(Request $request, Topic $topic)
+    *
+    * @param Request $request
+    * @param Topic $topic
+    * @return RedirectResponse
+    */
+    public function update(Request $request, Topic $topic): RedirectResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -119,8 +138,11 @@ class TopicController extends Controller
 
     /**
      * Soft-delete the topic (admin only)
-     */
-    public function destroy(Topic $topic)
+    *
+    * @param Topic $topic
+    * @return RedirectResponse
+    */
+    public function destroy(Topic $topic): RedirectResponse
     {
         $user = Auth::user();
         if (! ($user instanceof User) || ! $user->isAdmin()) {

@@ -6,22 +6,32 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of users with roles and authored quizzes.
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         // Load users with roles and authored quizzes to avoid N+1 queries
         $all = User::with(['roles', 'authoredQuizzes'])->orderBy('name');
 
         // Authors: users who have the 'author' role
-        $authors = (clone $all)->whereHas('roles', function($q){ $q->where('role', 'author'); })->get();
+        $authors = (clone $all)->whereHas('roles', function ($q) {
+            $q->where('role', 'author');
+        })->get();
 
         // Regular users: those who are not admins and not authors
-        $users = (clone $all)->whereDoesntHave('roles', function($q){ $q->where('role', 'admin'); })->whereDoesntHave('roles', function($q){ $q->where('role', 'author'); })->get();
+        $users = (clone $all)
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('role', 'admin');
+            })
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('role', 'author');
+            })
+            ->get();
 
         return view('users.index', compact('authors', 'users'));
     }

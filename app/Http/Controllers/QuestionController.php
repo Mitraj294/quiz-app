@@ -10,21 +10,25 @@ use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
-
     private const RULE_NULLABLE_STRING = 'nullable|string';
 
+    /**
+     * Show create form for a new question under a topic
+     */
     public function create(Topic $topic)
     {
-        // Provide the topic and available question types
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'fill_the_blank'
+            3 => 'fill_the_blank',
         ];
 
         return view('questions.create', compact('topic', 'questionTypes'));
     }
 
+    /**
+     * Store a new question and attach to topic
+     */
     public function store(Request $request, Topic $topic)
     {
         $data = $request->validate([
@@ -39,7 +43,6 @@ class QuestionController extends Controller
             'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
-        // Map numeric type to human-friendly name and ensure the question_type exists
         $typeMap = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
@@ -48,15 +51,12 @@ class QuestionController extends Controller
 
         $typeName = $typeMap[$data['question_type']] ?? 'Unknown';
 
-        // The package maps the attribute `question_type` to DB column `name` via an accessor,
-        // so we must create/lookup by the actual column name `name`.
         $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
             'name' => $typeName,
         ]);
 
         // Wrap in transaction to ensure atomicity
         \Illuminate\Support\Facades\DB::transaction(function () use ($data, $topic, $questionTypeModel) {
-            // Create question using package model (takes advantage of attribute mapping)
             $question = VendorQuestion::create([
                 'name' => $data['question_text'],
                 'question_type_id' => $questionTypeModel->id,
@@ -69,56 +69,41 @@ class QuestionController extends Controller
 
             // If MCQ types, store options and mark correct ones
             if (in_array($data['question_type'], [1, 2])) {
-                $this->storeMcqOptions($question->id, $data['options'] ?? [], $data['correct'] ?? []);
+                $correct = $data['correct'] ?? [];
+                if (! empty($data['options'])) {
+                    foreach ($data['options'] as $idx => $opt) {
+                        if (! empty($opt)) {
+                            VendorOption::create([
+                                'question_id' => $question->id,
+                                'name' => $opt,
+                                'is_correct' => in_array($idx, $correct),
+                            ]);
+                        }
+                    }
+                }
             }
 
-            // If text/short answer, store the answer as a correct option (package has no explicit text-answer column)
+            // If text/short answer, store the answer as a correct option
             if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
-                $this->storeTextAnswerOption($question->id, $data['text_answer']);
+                VendorOption::create([
+                    'question_id' => $question->id,
+                    'name' => $data['text_answer'],
+                    'is_correct' => true,
+                ]);
             }
         });
 
         return redirect()->route('topics.show', $topic->id)->with('success', 'Question added successfully');
     }
 
-    /**
-     * Store MCQ options for a given question id.
-     */
-    private function storeMcqOptions(int $questionId, array $options, array $correct): void
-    {
-        foreach ($options as $idx => $opt) {
-            if (! empty($opt)) {
-                VendorOption::create([
-                    'question_id' => $questionId,
-                    'name' => $opt,
-                    'is_correct' => in_array((int) $idx, array_map('intval', $correct)),
-                ]);
-            }
-        }
-    }
-
-    /**
-     * Store a text/short-answer option as the correct option for the question.
-     */
-    private function storeTextAnswerOption(int $questionId, string $text): void
-    {
-        VendorOption::create([
-            'question_id' => $questionId,
-            'name' => $text,
-            'is_correct' => true,
-        ]);
-    }
 
     /**
      * Show the form for editing a question
      */
     public function edit($questionId)
     {
-        // The vendor model defines the relationship as `question_type()` (snake_case)
-        // so eager-load that relationship. Guard access in case the relation is missing.
         $question = VendorQuestion::with(['options', 'question_type'])->findOrFail($questionId);
 
-        // Map question type to the numeric format expected by the form
         $typeMap = [
             'multiple_choice_single_answer' => 1,
             'multiple_choice_multiple_answer' => 2,
@@ -128,7 +113,7 @@ class QuestionController extends Controller
         $questionTypes = [
             1 => 'multiple_choice_single_answer',
             2 => 'multiple_choice_multiple_answer',
-            3 => 'fill_the_blank'
+            3 => 'fill_the_blank',
         ];
 
         $currentType = 1;
@@ -170,7 +155,6 @@ class QuestionController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($data, $questionId, $questionTypeModel) {
             $question = VendorQuestion::findOrFail($questionId);
 
-            // Update question
             $question->update([
                 'name' => $data['question_text'],
                 'question_type_id' => $questionTypeModel->id,
@@ -178,29 +162,39 @@ class QuestionController extends Controller
                 'media_type' => $data['media_type'] ?? null,
             ]);
 
-            // Delete existing options
             VendorOption::where('question_id', $questionId)->delete();
 
-            // Re-create options
             if (in_array($data['question_type'], [1, 2])) {
-                $this->storeMcqOptions($questionId, $data['options'] ?? [], $data['correct'] ?? []);
+                $correct = $data['correct'] ?? [];
+                if (! empty($data['options'])) {
+                    foreach ($data['options'] as $idx => $opt) {
+                        if (! empty($opt)) {
+                            VendorOption::create([
+                                'question_id' => $questionId,
+                                'name' => $opt,
+                                'is_correct' => in_array($idx, $correct),
+                            ]);
+                        }
+                    }
+                }
             }
 
             if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
-                $this->storeTextAnswerOption($questionId, $data['text_answer']);
+                VendorOption::create([
+                    'question_id' => $questionId,
+                    'name' => $data['text_answer'],
+                    'is_correct' => true,
+                ]);
             }
         });
 
-        // Find if this question is attached to any quiz via quiz_questions pivot
         $quizId = \Illuminate\Support\Facades\DB::table('quiz_questions')
             ->where('question_id', $questionId)
             ->value('quiz_id');
 
         if ($quizId) {
-            // Log and redirect to the quiz's select questions page so admin can continue managing quiz questions
             \Illuminate\Support\Facades\Log::info('Question updated and linked to quiz, redirecting to select page', ['question_id' => $questionId, 'quiz_id' => $quizId]);
-            return redirect()->route('quizzes.questions.select', $quizId)
-                ->with('success', 'Question updated successfully. Returning to quiz question selection.');
+            return redirect()->route('quizzes.questions.select', $quizId)->with('success', 'Question updated successfully');
         }
 
         \Illuminate\Support\Facades\Log::info('Question updated (no related quiz found)', ['question_id' => $questionId]);
@@ -215,21 +209,17 @@ class QuestionController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($questionId) {
             $question = VendorQuestion::findOrFail($questionId);
 
-            // Delete options first
             VendorOption::where('question_id', $questionId)->delete();
 
-            // Delete topicable relationships
             \Illuminate\Support\Facades\DB::table('topicables')
-                ->where('topicable_type', 'LIKE', '%Question%')
                 ->where('topicable_id', $questionId)
+                ->whereIn('topicable_type', ['Harishdurga\\\\LaravelQuiz\\\\Models\\\\Question', 'App\\\\Models\\\\Question'])
                 ->delete();
 
-            // Delete quiz_questions relationships
             \Illuminate\Support\Facades\DB::table('quiz_questions')
                 ->where('question_id', $questionId)
                 ->delete();
 
-            // Delete the question
             $question->delete();
         });
 
