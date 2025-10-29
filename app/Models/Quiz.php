@@ -54,6 +54,6 @@ class Quiz extends BaseQuiz
     public function authors()
     {
         return $this->belongsToMany(\App\Models\User::class, 'quiz_authors', 'quiz_id', 'author_id')
-            ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at', 'deleted_at']);
+            ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at']);
     }
 }

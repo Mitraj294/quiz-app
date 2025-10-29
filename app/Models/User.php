@@ -57,7 +57,7 @@ class User extends Authenticatable
     public function authoredQuizzes()
     {
         return $this->belongsToMany(\App\Models\Quiz::class, 'quiz_authors', 'author_id', 'quiz_id')
-            ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at', 'deleted_at']);
+             ->withPivot(['author_type', 'author_role', 'is_active', 'created_at', 'updated_at']);
     }
 
     public function hasRole(string $roleName): bool

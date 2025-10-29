@@ -157,7 +157,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Your Progress</h3>
                             <p class="text-sm text-gray-600 mb-4">Track your quiz history and scores</p>
-                            <a href="#" class="text-purple-600 hover:text-purple-800 text-sm font-medium">View Stats →</a>
+                            <a href="{{ route('progress.index') }}" class="text-purple-600 hover:text-purple-800 text-sm font-medium">View Stats →</a>
                         </div>
                     </div>
                 </div>

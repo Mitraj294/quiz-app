@@ -32,11 +32,80 @@
     <div class="py-12">
         <div class="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">
-                    {{ $quiz->name }}
-                    <span class="text-sm font-normal text-gray-600">({{ $quiz->questions->count() }} Questions)</span>
-                    <span class="float-right text-lg font-semibold">Score: {{ $attempt->score }}</span>
-                </h3>
+                <div class="flex items-start justify-between gap-6 mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold">
+                            {{ $quiz->name }}
+                            <span class="text-sm font-normal text-gray-600">({{ $quiz->questions->count() }} Questions)</span>
+                        </h3>
+                    </div>
+
+                    @php
+                    // Time taken for this attempt (used in the right-side grid)
+                    $start = $attempt->created_at ? \Carbon\Carbon::parse($attempt->created_at) : null;
+                    $end = $attempt->completed_at ? \Carbon\Carbon::parse($attempt->completed_at) : null;
+                    if ($start && $end) {
+                    $seconds = $start->diffInSeconds($end);
+                    $minutesFloat = $seconds / 60;
+                    $timeTaken = number_format($minutesFloat, 2, '.', '');
+                    } else {
+                    $timeTaken = null;
+                    }
+                    @endphp
+
+                    <div class="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4 min-w-[420px]">
+                        <div>
+                            <div class="text-xs text-gray-600">Total Mark</div>
+                            <div class="text-base font-semibold">{{ $quiz->total_marks ?? $quiz->total_mark ?? $quiz->total ?? '—' }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs text-gray-600">Passing Mark</div>
+                            <div class="text-base font-semibold">{{ $quiz->pass_marks ?? '—' }}</div>
+                        </div>
+                        @php
+                            $totalMarks = $quiz->questions->sum('marks') ?? 0;
+
+                            // Determine pass threshold (supporting pass_mark, pass_marks, pass_percentage)
+                            if (isset($quiz->pass_mark) && $quiz->pass_mark !== null) {
+                                $passThreshold = floatval($quiz->pass_mark);
+                            } elseif (isset($quiz->pass_marks) && $quiz->pass_marks !== null) {
+                                $passThreshold = floatval($quiz->pass_marks);
+                            } elseif (isset($quiz->pass_percentage) && $quiz->pass_percentage !== null) {
+                                $passThreshold = $totalMarks * (floatval($quiz->pass_percentage) / 100);
+                            } else {
+                                $passThreshold = $totalMarks ? ($totalMarks * 0.5) : null;
+                            }
+
+                            $score = isset($attempt) && isset($attempt->score) ? floatval($attempt->score) : null;
+
+                            if ($score === null || $passThreshold === null) {
+                                $scoreClass = 'text-gray-700';
+                            } else {
+                                $scoreClass = $score >= $passThreshold ? 'text-green-700' : 'text-red-700';
+                            }
+                        @endphp
+
+                        <div>
+                            <div class="text-xs text-gray-600">Score</div>
+                            <div class="text-base font-semibold {{ $scoreClass }}">
+                                {{ $score !== null ? $score : '—' }}
+                            </div>
+                        </div>
+                        <div></div>
+                        <div>
+                            <div class="text-xs text-gray-600">Exam Duration</div>
+                            <div class="text-base font-semibold">{{ $quiz->duration ? $quiz->duration . ' min' : '—' }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs text-gray-600">Time Taken</div>
+                            <div class="text-base font-semibold">{{ $timeTaken !== null ? $timeTaken . ' min' : '—' }}</div>
+                        </div>
+
+
+                    </div>
+                </div>
 
                 <div class="space-y-4">
                     @foreach($quiz->questions as $index => $quizQuestion)
@@ -73,37 +142,37 @@
 
                     // Calculate earned marks using the same logic as controller
                     if ($isBlank) {
-                        $hasAnswer = trim((string)($userText ?? '')) !== '';
-                        $isQuestionCorrect = $isBlankCorrect ?? false;
-                        
-                        if ($isQuestionCorrect) {
-                            $earnedMarks = $marks;
-                        } elseif ($negEnabled && $neg > 0 && $hasAnswer) {
-                            $earnedMarks = -1.0 * $neg;
-                        } else {
-                            $earnedMarks = 0.0;
-                        }
+                    $hasAnswer = trim((string)($userText ?? '')) !== '';
+                    $isQuestionCorrect = $isBlankCorrect ?? false;
+
+                    if ($isQuestionCorrect) {
+                    $earnedMarks = $marks;
+                    } elseif ($negEnabled && $neg > 0 && $hasAnswer) {
+                    $earnedMarks = -1.0 * $neg;
                     } else {
-                        $hasAnswer = !empty($selectedOptionIds);
-                        $sel = $selectedOptionIds ?? [];
-                        $corr = $correctOptions ?? [];
-                        $isQuestionCorrect = $hasAnswer && empty(array_diff($sel, $corr)) && empty(array_diff($corr, $sel));
-                        
-                        // MCQ scoring - proportional partial marking
-                        $correctCount = count($corr);
-                        $selectedCorrect = count(array_intersect($corr, $sel));
-                        $selectedIncorrect = max(0, count($sel) - $selectedCorrect);
-                        
-                        if ($correctCount === 0) {
-                            $earnedMarks = 0.0;
-                        } else {
-                            $proportion = $selectedCorrect / $correctCount;
-                            $earnedMarks = $proportion * $marks;
-                            
-                            if ($negEnabled && $selectedIncorrect > 0 && $neg > 0) {
-                                $earnedMarks -= ($neg * $selectedIncorrect);
-                            }
-                        }
+                    $earnedMarks = 0.0;
+                    }
+                    } else {
+                    $hasAnswer = !empty($selectedOptionIds);
+                    $sel = $selectedOptionIds ?? [];
+                    $corr = $correctOptions ?? [];
+                    $isQuestionCorrect = $hasAnswer && empty(array_diff($sel, $corr)) && empty(array_diff($corr, $sel));
+
+                    // MCQ scoring - proportional partial marking
+                    $correctCount = count($corr);
+                    $selectedCorrect = count(array_intersect($corr, $sel));
+                    $selectedIncorrect = max(0, count($sel) - $selectedCorrect);
+
+                    if ($correctCount === 0) {
+                    $earnedMarks = 0.0;
+                    } else {
+                    $proportion = $selectedCorrect / $correctCount;
+                    $earnedMarks = $proportion * $marks;
+
+                    if ($negEnabled && $selectedIncorrect > 0 && $neg > 0) {
+                    $earnedMarks -= ($neg * $selectedIncorrect);
+                    }
+                    }
                     }
 
                     $boxClass = $stateBoxClass($hasAnswer, $isQuestionCorrect);
@@ -200,71 +269,67 @@
                                 <div class="{{ $boxClass }}">
                                     @php
                                     $earnedRounded = round($earnedMarks, 2);
-                                    
+
                                     // Determine status label
                                     if (!$hasAnswer) {
-                                        $statusLabel = 'Not answered';
+                                    $statusLabel = 'Not answered';
                                     } elseif ($isQuestionCorrect) {
-                                        $statusLabel = 'Correct';
+                                    $statusLabel = 'Correct';
                                     } else {
-                                        // Check if partial credit was given
-                                        if ($earnedRounded > 0) {
-                                            $statusLabel = 'Partial';
-                                        } else {
-                                            $statusLabel = 'Wrong';
-                                        }
+                                    // Check if partial credit was given
+                                    if ($earnedRounded > 0) {
+                                    $statusLabel = 'Partial';
+                                    } else {
+                                    $statusLabel = 'Wrong';
                                     }
-                                    
+                                    }
+
                                     // Determine color class
                                     if ($earnedRounded > 0) {
-                                        $marksColorClass = 'text-green-700';
+                                    $marksColorClass = 'text-green-700';
                                     } elseif ($earnedRounded < 0) {
-                                        $marksColorClass = 'text-red-700';
-                                    } else {
-                                        $marksColorClass = 'text-gray-700';
-                                    }
-                                    @endphp
-                                    
-                                    <div class="text-sm font-semibold {{ $marksColorClass }}">
+                                        $marksColorClass='text-red-700' ;
+                                        } else {
+                                        $marksColorClass='text-gray-700' ;
+                                        }
+                                        @endphp
+
+                                        <div class="text-sm font-semibold {{ $marksColorClass }}">
                                         Earned: {{ $earnedRounded >= 0 ? '+' : '' }}{{ $earnedRounded }}
-                                    </div>
-                                    <div class="text-sm mt-2 font-semibold">
-                                        {{ $statusLabel }}
-                                    </div>
+                                </div>
+                                <div class="text-sm mt-2 font-semibold">
+                                    {{ $statusLabel }}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    @endforeach
                 </div>
+                @endforeach
+            </div>
 
-                @php
-                // Summary / pass-fail
-                $totalMarks = $quiz->questions->sum('marks') ?? 0;
-                if (isset($quiz->pass_mark) && $quiz->pass_mark !== null) {
-                $passed = $attempt->score >= $quiz->pass_mark;
-                } elseif (isset($quiz->pass_percentage) && $quiz->pass_percentage !== null) {
-                $passed = $attempt->score >= ($totalMarks * ($quiz->pass_percentage / 100));
-                } else {
-                $passed = $totalMarks ? ($attempt->score >= ($totalMarks * 0.5)) : ($attempt->score > 0);
-                }
+            @php
+            // Summary / pass-fail
+            $totalMarks = $quiz->questions->sum('marks') ?? 0;
+            if (isset($quiz->pass_mark) && $quiz->pass_mark !== null) {
+            $passed = $attempt->score >= $quiz->pass_mark;
+            } elseif (isset($quiz->pass_percentage) && $quiz->pass_percentage !== null) {
+            $passed = $attempt->score >= ($totalMarks * ($quiz->pass_percentage / 100));
+            } else {
+            $passed = $totalMarks ? ($attempt->score >= ($totalMarks * 0.5)) : ($attempt->score > 0);
+            }
 
-                $summaryBox = $passed
-                ? 'ml-4 px-3 py-2 rounded text-base w-36 flex items-center justify-center h-12 bg-green-100 border border-green-200 text-green-700'
-                : 'ml-4 px-3 py-2 rounded text-base w-36 flex items-center justify-center h-12 bg-red-100 border border-red-200 text-red-700';
-                @endphp
 
-                <div class="flex items-center justify-between px-4 py-8">
-                    <a href="{{ route('quizzes.result_index', $quiz->id) }}"
-                        class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        Back to Results
-                    </a>
+            @endphp
 
-                    <div class="{{ $summaryBox }}">
-                        Score: {{ $attempt->score }}
-                    </div>
-                </div>
+            <div class="flex items-center justify-between px-4 py-8">
+                <a href="{{ route('quizzes.result_index', $quiz->id) }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    Back to Results
+                </a>
+
+
             </div>
         </div>
+    </div>
     </div>
 </x-app-layout>

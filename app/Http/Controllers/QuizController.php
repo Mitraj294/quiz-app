@@ -695,6 +695,21 @@ class QuizController extends Controller
     public function resultIndex(Quiz $quiz)
     {
         $userId = Auth::id();
+        // If admin and user_id is provided, use that
+        $authUser = Auth::user();
+        // Use direct DB check for admin role to avoid static analysis/model issues
+        $isAdmin = false;
+        if ($authUser) {
+            $isAdmin = DB::table('role_user')
+                ->join('roles', 'role_user.role_id', '=', 'roles.id')
+                ->where('role_user.user_id', $authUser->id)
+                ->where('roles.role', 'admin') // Change 'role' to your actual column name if different
+                ->exists();
+        }
+        if ($isAdmin && request()->has('user_id')) {
+            $userId = request()->input('user_id');
+        }
+
         if (! $userId) {
             return redirect()->route('quizzes.show', $quiz->id)->with('error', 'Please login to view results');
         }

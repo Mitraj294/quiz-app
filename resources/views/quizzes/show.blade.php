@@ -28,7 +28,7 @@
                     $totalQuestions = $quiz->questions->count();
                     $mandatoryCount = $quiz->questions->where('is_optional', false)->count();
                     $optionalCount = $quiz->questions->where('is_optional', true)->count();
-                    $userAttempts = auth()->check() ? $quiz->attemptsCountForUser(auth()->id()) : 0;
+                    $userAttempts = auth()->check() ? \App\Models\Attempt::where('quiz_id', $quiz->id)->where('user_id', auth()->id())->whereNotNull('completed_at')->count() : 0;
 
                     // Compute total marks from quiz_questions marks field and always display computed values.
                     $computedTotalMarks = $quiz->questions->sum('marks');
@@ -207,7 +207,11 @@
                 <!-- Regular user: show Start Quiz button -->
                 @if($quiz->questions->count() > 0 && $quiz->is_published)
                 @php
-                $attempts = $quiz->attemptsCountForUser(auth()->id());
+                // Use application Attempt model directly to avoid vendor soft-delete scopes
+                $attempts = \App\Models\Attempt::where('quiz_id', $quiz->id)
+                    ->where('user_id', auth()->id())
+                    ->whereNotNull('completed_at')
+                    ->count();
                 @endphp
 
                 @if($attempts === 0)

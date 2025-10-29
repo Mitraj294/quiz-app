@@ -96,16 +96,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Remove a role from a user (by id or name)
     Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\UserController::class, 'removeRole'])->name('users.roles.remove');
 
-    // Admin analytics
+    // Admin analytics main and subpages
     Route::get('/admin/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
-    // Full admin pages for lists
-    // Topics are loaded inline inside the analytics page as a fragment/partial
-    Route::get('/admin/analytics/topics/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'topicsFragment'])->name('admin.analytics.topics.fragment');
-    Route::get('/admin/analytics/topics/{topic}/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'topicFragment'])->name('admin.analytics.topic.fragment');
-    // Quizzes and Users will be loaded inline as fragments
-    Route::get('/admin/analytics/quizzes/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'quizzesFragment'])->name('admin.analytics.quizzes.fragment');
-    Route::get('/admin/analytics/users/fragment', [\App\Http\Controllers\Admin\AnalyticsController::class, 'usersFragment'])->name('admin.analytics.users.fragment');
-    // (drilldown JSON endpoints removed — pages-only analytics)
+    Route::get('/admin/analytics/topics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'topics'])->name('admin.analytics.topics');
+    Route::get('/admin/analytics/quizzes', [\App\Http\Controllers\Admin\AnalyticsController::class, 'quizzes'])->name('admin.analytics.quizzes');
+    Route::get('/admin/analytics/users', [\App\Http\Controllers\Admin\AnalyticsController::class, 'users'])->name('admin.analytics.users');
 });
 
 // Quiz public routes for authenticated users (must be after admin routes)
@@ -115,6 +110,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/quizzes/{quiz}/attempts/{attempt}', [AttemptController::class, 'show'])->name('quizzes.attempt_show');
     Route::get('/quizzes/{quiz}/attempt', [AttemptController::class, 'start'])->name('quizzes.attempt');
     Route::post('/quizzes/{quiz}/submit', [AttemptController::class, 'submit'])->name('quizzes.submit');
+});
+
+// User Progress routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/progress', [\App\Http\Controllers\ProgressController::class, 'index'])->name('progress.index');
+    Route::get('/progress/quiz', [\App\Http\Controllers\ProgressController::class, 'quiz'])->name('progress.quiz');
+    Route::get('/progress/topic', [\App\Http\Controllers\ProgressController::class, 'topic'])->name('progress.topic');
 });
 
 require __DIR__ . '/auth.php';

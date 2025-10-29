@@ -26,7 +26,7 @@
                         <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/users')" :active="request()->is('users*')">
                             {{ __('Manage Users') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/admin/analytics')" :active="request()->is('analytics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900 border-b-2 border-indigo-500" :href="url('/admin/analytics')" :active="request()->is('admin/analytics')">
                             {{ __('Analytics') }}
                         </x-nav-link>
                     @else
@@ -35,6 +35,9 @@
                         </x-nav-link>
                         <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
                             {{ __('Topics') }}
+                        </x-nav-link>
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('progress.index')" :active="request()->is('progress*')">
+                            {{ __('Progress') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -106,6 +109,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="url('/topics')" :active="request()->is('topics*')">
                     {{ __('Topics') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('progress.index')" :active="request()->is('progress*')">
+                    {{ __('Progress') }}
                 </x-responsive-nav-link>
             @endif
         </div>

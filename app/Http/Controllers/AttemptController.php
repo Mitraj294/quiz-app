@@ -28,44 +28,81 @@ class AttemptController extends Controller
      */
     public function start(Quiz $quiz)
     {
-        // Eager load questions with related data
         $quiz->load(['questions.question.options', 'questions.question.question_type']);
 
-        // If no questions, redirect back
+        $redirect = null;
+        if (!$redirect) {
+            $redirect = $this->checkNoQuestions($quiz);
+        }
+        if (!$redirect) {
+            $redirect = $this->checkMaxAttempts($quiz);
+        }
+        if (!$redirect) {
+            $redirect = $this->checkCooldown($quiz);
+        }
+
+        if ($redirect) {
+            return $redirect;
+        }
+
+        $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
+        // Always create a new attempt when starting/retaking
+        $attempt = Attempt::create([
+            'user_id' => Auth::id(),
+            'quiz_id' => $quiz->id,
+            'score' => 0.00,
+            'passed' => 0,
+            'completed_at' => null,
+        ]);
+        return view($viewName, compact('quiz', 'attempt'));
+    }
+
+    /**
+     * Helper: Check if quiz has no questions
+     */
+    private function checkNoQuestions(Quiz $quiz)
+    {
         if ($quiz->questions->isEmpty()) {
             return redirect()->route('quizzes.show', $quiz->id)
                 ->with('error', 'This quiz has no questions yet.');
         }
+        return null;
+    }
 
-        // Check max attempts per user
+    /**
+     * Helper: Check max attempts per user
+     */
+    private function checkMaxAttempts(Quiz $quiz)
+    {
         if ($quiz->max_attempts > 0) {
             $attemptCount = Attempt::where('quiz_id', $quiz->id)
                 ->where('user_id', Auth::id())
                 ->count();
-
             if ($attemptCount >= $quiz->max_attempts) {
                 return redirect()->route('quizzes.index')
                     ->with('error', 'You have already attempted this quiz. You can only attempt this quiz ' . $quiz->max_attempts . ' time(s). Please try other quizzes.');
             }
         }
+        return null;
+    }
 
-        // Enforce cooldown between attempts if configured
+    /**
+     * Helper: Enforce cooldown between attempts
+     */
+    private function checkCooldown(Quiz $quiz)
+    {
         if ($quiz->time_between_attempts && Auth::check()) {
             $lastAttempt = Attempt::where('quiz_id', $quiz->id)
                 ->where('user_id', Auth::id())
                 ->whereNotNull('completed_at')
                 ->orderByDesc('completed_at')
                 ->first();
-
             if ($lastAttempt) {
                 try {
-                    // Treat completed_at as UTC and compare using UTC now
                     $lockUntil = Carbon::parse($lastAttempt->completed_at, 'UTC')
                         ->addMinutes($quiz->time_between_attempts);
-
                     if (Carbon::now('UTC')->lt($lockUntil)) {
                         $seconds = Carbon::now('UTC')->diffInSeconds($lockUntil);
-
                         return redirect()->route('quizzes.show', $quiz->id)
                             ->with('error', 'You must wait ' . gmdate('i:s', $seconds) . ' before attempting this quiz again.');
                     }
@@ -74,17 +111,7 @@ class AttemptController extends Controller
                 }
             }
         }
-
-        // Choose view
-        $viewName = view()->exists('quizzes.take') ? 'quizzes.take' : 'quizzes.attempt';
-
-        // Find open (in-progress) attempt if any
-        $attempt = Attempt::where('quiz_id', $quiz->id)
-            ->where('user_id', Auth::id())
-            ->whereNull('completed_at')
-            ->first();
-
-        return view($viewName, compact('quiz', 'attempt'));
+        return null;
     }
 
     /**
@@ -118,6 +145,7 @@ class AttemptController extends Controller
 
             // Use provided attempt if available (created when user clicked Start)
             $attemptId = $request->input('attempt_id');
+            $attempt = null;
             if ($attemptId) {
                 $attempt = Attempt::where('id', $attemptId)
                     ->where('quiz_id', $quiz->id)
@@ -205,7 +233,6 @@ class AttemptController extends Controller
     private function processAttemptAndCalculateScore(Quiz $quiz, Attempt $attempt, array $answers): float
     {
         $totalScore = 0.0;
-
         $negSettings = $quiz->negative_marking_settings ?? [];
         $negEnabled = $negSettings['enable_negative_marks'] ?? true;
 
@@ -219,7 +246,6 @@ class AttemptController extends Controller
             } else {
                 $earned = $this->processMcqQuestion($quizQuestion, $attempt, $userAnswer, $negEnabled);
             }
-
             $totalScore += $earned;
         }
 
@@ -248,17 +274,18 @@ class AttemptController extends Controller
             'option_id' => null,
             'answer_text' => $userAnswer,
         ]);
+
         $correctAnswers = $question->options
             ->where('is_correct', 1)
             ->pluck('option')
-            ->map(fn ($v) => trim((string) $v))
+            ->map(fn($v) => trim((string)$v))
             ->filter()
             ->values()
             ->all();
 
-        $submitted = trim((string) ($userAnswer ?? ''));
+        $submitted = trim((string)($userAnswer ?? ''));
         $isCorrect = ($submitted !== '') && collect($correctAnswers)
-            ->map(fn ($v) => strtolower($v))
+            ->map(fn($v) => strtolower($v))
             ->contains(strtolower($submitted));
 
         if ($isCorrect) {
@@ -297,25 +324,27 @@ class AttemptController extends Controller
             $selected = [];
         }
 
-        if (! empty($selected)) {
+        if (!empty($selected)) {
             foreach ($selected as $optionId) {
                 $opt = $question->options->firstWhere('id', $optionId);
-
                 AttemptAnswer::create([
                     'quiz_attempt_id' => $attempt->id,
                     'question_id' => $questionId,
                     'option_id' => $optionId,
-                    'answer_text' => $opt ? trim((string) $opt->option) : '',
+                    'answer_text' => $opt ? trim((string)$opt->option) : '',
                 ]);
             }
         } else {
-            Log::info('No answer provided for question', ['attempt_id' => $attempt->id, 'question_id' => $questionId]);
+            Log::info('No answer provided for question', [
+                'attempt_id' => $attempt->id,
+                'question_id' => $questionId
+            ]);
         }
 
         $correctOptionIds = $question->options
             ->where('is_correct', 1)
             ->pluck('id')
-            ->map(fn ($v) => intval($v))
+            ->map(fn($v) => intval($v))
             ->all();
 
         $correctCount = count($correctOptionIds);
@@ -327,7 +356,6 @@ class AttemptController extends Controller
         } else {
             $proportion = $selectedCorrect / $correctCount;
             $earned = $proportion * $marks;
-
             if ($negEnabled && $selectedIncorrect > 0 && $neg > 0) {
                 $earned -= ($neg * $selectedIncorrect);
             }
