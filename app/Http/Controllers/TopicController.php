@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-
+// Quiz model types used in topicables
+const QUIZ_MODEL_TYPES = ['App\\Models\\Quiz', 'Harishdurga\\LaravelQuiz\\Models\\Quiz'];
 class TopicController extends Controller
 {
     /**
@@ -20,10 +21,32 @@ class TopicController extends Controller
      */
     public function index(): View
     {
-        $topics = Topic::whereNull('parent_id')->orderBy('name')->get();
+        // Eager load quizzes count for topics
+        $topics = Topic::withCount('quizzes')
+            ->with('children')
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
+        // Manually set quizzes_count for each child topic
+        foreach ($topics as $topic) {
+            foreach ($topic->children as $child) {
+                $quizCount = DB::table('topicables')
+                    ->where('topic_id', $child->id)
+                    ->whereIn('topicable_type', QUIZ_MODEL_TYPES)
+                    ->count();
+                $child->quizzes_count = $quizCount;
+            }
+        }
+
+        // Calculate total quizzes (direct + in subtopics)
+        $totalQuizzes = $topics->sum('quizzes_count') + $topics->flatMap(function($topic){
+            return $topic->children;
+        })->sum('quizzes_count');
 
         return view('topics.index', [
             'topics' => $topics,
+            'totalQuizzes' => $totalQuizzes,
         ]);
     }
 
@@ -70,12 +93,12 @@ class TopicController extends Controller
     */
     public function show(Topic $topic): View
     {
-        $topic->load('questions');
+        $topic->load('questions', 'children');
 
-        // Manually fetch quizzes due to polymorphic namespace mismatch
+        // Manually fetch quizzes for main topic
         $quizIds = DB::table('topicables')
             ->where('topic_id', $topic->id)
-            ->whereIn('topicable_type', ['App\\Models\\Quiz', 'Harishdurga\\LaravelQuiz\\Models\\Quiz'])
+            ->whereIn('topicable_type', QUIZ_MODEL_TYPES)
             ->pluck('topicable_id');
 
         /** @var User|null $user */
@@ -91,8 +114,24 @@ class TopicController extends Controller
                 ->with('questions')
                 ->get();
         }
-
         $topic->setRelation('quizzes', $quizzes);
+
+        // Load quizzes for each child topic
+        foreach ($topic->children as $child) {
+            $childQuizIds = DB::table('topicables')
+                ->where('topic_id', $child->id)
+                ->whereIn('topicable_type', QUIZ_MODEL_TYPES)
+                ->pluck('topicable_id');
+
+            if ($user instanceof User && $user->isAdmin()) {
+                $childQuizzes = \App\Models\Quiz::whereIn('id', $childQuizIds)->get();
+            } else {
+                $childQuizzes = \App\Models\Quiz::whereIn('id', $childQuizIds)
+                    ->where('is_published', 1)
+                    ->get();
+            }
+            $child->setRelation('quizzes', $childQuizzes);
+        }
 
         return view('topics.show', [
             'topic' => $topic,

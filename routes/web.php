@@ -8,6 +8,9 @@ use App\Http\Controllers\TopicController;
 use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
 
+if (! defined('AUTH_MIDDLEWARE')) {
+    define('AUTH_MIDDLEWARE', 'App\Http\Middleware\Authenticate');
+}
 if (! defined('PROFILE_PATH')) {
     define('PROFILE_PATH', '/profile');
 }
@@ -27,13 +30,20 @@ if (! defined('EDIT_SUFFIX')) {
     define('EDIT_SUFFIX', '/edit');
 }
 
-Route::view('/', 'welcome');
+use Illuminate\Support\Facades\Auth;
+
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+    return view('welcome');
+});
 
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Profile
     Route::get(PROFILE_PATH, [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch(PROFILE_PATH, [ProfileController::class, 'update'])->name('profile.update');
@@ -85,12 +95,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Publish/unpublish
     Route::post(QUIZ_PATH . '/publish', [QuizController::class, 'publish'])->name('quizzes.publish');
 
-    // Quiz authors management
-    Route::post(QUIZ_PATH . '/authors', [\App\Http\Controllers\QuizAuthorController::class, 'attach'])->name('quizzes.authors.attach');
-    Route::delete(QUIZ_PATH . '/authors/{user}', [\App\Http\Controllers\QuizAuthorController::class, 'detach'])->name('quizzes.authors.detach');
 
     // Admin: users list
     Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+        Route::post('/users/add', [\App\Http\Controllers\UserController::class, 'addUser'])->name('users.add');
     // Assign a role to a user
     Route::post('/users/{user}/roles', [\App\Http\Controllers\UserController::class, 'assignRole'])->name('users.roles.assign');
     // Remove a role from a user (by id or name)
@@ -104,7 +112,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 // Quiz public routes for authenticated users (must be after admin routes)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
     Route::get('/quizzes/{quiz}/results', [QuizController::class, 'resultIndex'])->name('quizzes.result_index');
     Route::get('/quizzes/{quiz}/attempts/{attempt}', [AttemptController::class, 'show'])->name('quizzes.attempt_show');

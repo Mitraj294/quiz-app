@@ -159,6 +159,37 @@
                                 @if($subTopic->description)
                                 <p class="text-sm text-gray-700">{{ $subTopic->description }}</p>
                                 @endif
+
+                                <div class="mt-3">
+                                    @php
+                                    $totalQuizzes = isset($subTopic->quizzes) ? $subTopic->quizzes->count() : 0;
+                                    $publishedQuizzes = isset($subTopic->quizzes) ? $subTopic->quizzes->where('is_published', true)->count() : 0;
+                                    @endphp
+                                    @auth
+                                    @if(Auth::user()->isAdmin())
+                                    <span class="text-sm text-gray-600">
+                                        {{ $totalQuizzes }} {{ $totalQuizzes === 1 ? 'quiz' : 'quizzes' }}
+                                        ({{ $publishedQuizzes }} published)
+                                    </span>
+                                    @else
+                                    @if($publishedQuizzes > 0)
+                                    <span class="text-sm text-gray-600">
+                                        {{ $publishedQuizzes }} {{ $publishedQuizzes === 1 ? 'quiz' : 'quizzes' }}
+                                    </span>
+                                    @else
+                                    <span class="text-sm text-gray-500">No quizzes yet</span>
+                                    @endif
+                                    @endif
+                                    @else
+                                    @if($publishedQuizzes > 0)
+                                    <span class="text-sm text-gray-600">
+                                        {{ $publishedQuizzes }} {{ $publishedQuizzes === 1 ? 'quiz' : 'quizzes' }}
+                                    </span>
+                                    @else
+                                    <span class="text-sm text-gray-500">No quizzes yet</span>
+                                    @endif
+                                    @endauth
+                                </div>
                             </a>
                             @endforeach
                         </div>
@@ -187,6 +218,8 @@
                                     </div>
                                     @if(!$quiz->is_published)
                                     <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Draft</span>
+                                    @else
+                                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Published</span>
                                     @endif
                                 </div>
                                 <div class="flex gap-3 mt-3">
@@ -199,7 +232,7 @@
                                     @else
                                     @if($quiz->is_published && $quiz->questions->count() > 0)
                                     <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-blue-600 hover:text--900 font-medium">
-                                    Quiz Details
+                                        Quiz Details
                                     </a>
                                     @else
                                     <span class="text-sm text-gray-500">Not available</span>

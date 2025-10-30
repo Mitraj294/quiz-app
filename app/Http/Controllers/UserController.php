@@ -33,7 +33,35 @@ class UserController extends Controller
             })
             ->get();
 
-        return view('users.index', compact('authors', 'users'));
+    $roles = Role::all();
+    return view('users.index', compact('authors', 'users', 'roles'));
+    }
+    
+    /**
+     * Handle Add User form submission from index page
+     */
+    public function addUser(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|in:user,author',
+        ]);
+
+        // Create user with default password '123456'
+        $user = \App\Models\User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => bcrypt('123456'),
+        ]);
+
+        // Assign role
+        $role = \App\Models\Role::where('role', $data['role'])->first();
+        if ($role) {
+            $user->roles()->attach($role->id);
+        }
+
+        return redirect()->back()->with('status', 'User created successfully!');
     }
 
     /**

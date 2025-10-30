@@ -17,6 +17,15 @@ class Topic extends BaseTopic
     protected $fillable = ['name', 'slug', 'parent_id', 'is_active', 'description'];
 
     /**
+     * Override quizzes relationship to count both App and vendor quiz types.
+     */
+    public function quizzes()
+    {
+        return $this->morphedByMany(\App\Models\Quiz::class, 'topicable')
+            ->orWherePivot('topicable_type', 'Harishdurga\\LaravelQuiz\\Models\\Quiz');
+    }
+
+    /**
      * Auto-generate a unique slug from the name if missing.
      */
     protected static function booted()

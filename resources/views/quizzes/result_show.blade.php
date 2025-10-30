@@ -1,8 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Result - {{ $quiz->name }}</h2>
+        <div class="flex items-center justify-between">
+            @php
+            $isAdmin = false;
+            if(auth()->user()) {
+                $isAdmin = \Illuminate\Support\Facades\DB::table('role_user')
+                    ->join('roles', 'role_user.role_id', '=', 'roles.id')
+                    ->where('role_user.user_id', auth()->id())
+                    ->where('roles.role', 'admin')
+                    ->exists();
+            }
+            $viewedUser = null;
+            if($isAdmin && request()->has('user_id')) {
+                $viewedUser = \App\Models\User::find(request()->input('user_id'));
+            }
+            @endphp
+            @if($isAdmin && $viewedUser)
+                <div class="flex flex-col">
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $viewedUser->name }}'s Analytics For {{ $quiz->name }}</h2>
+                </div>
+            @else
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Result - {{ $quiz->name }}</h2>
+            @endif
+        </div>
     </x-slot>
-
     @php
 
     // Shared helpers & config
@@ -32,24 +53,44 @@
     <div class="py-12">
         <div class="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex items-start justify-between gap-6 mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold">
+                        @php
+                        $isAdmin = false;
+                        if(auth()->user()) {
+                            $isAdmin = \Illuminate\Support\Facades\DB::table('role_user')
+                                ->join('roles', 'role_user.role_id', '=', 'roles.id')
+                                ->where('role_user.user_id', auth()->id())
+                                ->where('roles.role', 'admin')
+                                ->exists();
+                        }
+                        $viewedUser = null;
+                        if($isAdmin && request()->has('user_id')) {
+                            $viewedUser = \App\Models\User::find(request()->input('user_id'));
+                        }
+                        @endphp
+                        @if($isAdmin && $viewedUser)
+                            <div class="flex flex-col">
+                                <div class="text-lg font-bold">User: {{ $viewedUser->name }}</div>
+                                <div class="text-lg font-bold">Quiz: {{ $quiz->name }}</div>
+                                <span class="text-sm font-normal text-gray-600">({{ $quiz->questions->count() }} Questions)</span>
+                            </div>
+                        @else
                             {{ $quiz->name }}
                             <span class="text-sm font-normal text-gray-600">({{ $quiz->questions->count() }} Questions)</span>
-                        </h3>
-                    </div>
+                        @endif
+                    </h3>
 
                     @php
                     // Time taken for this attempt (used in the right-side grid)
                     $start = $attempt->created_at ? \Carbon\Carbon::parse($attempt->created_at) : null;
                     $end = $attempt->completed_at ? \Carbon\Carbon::parse($attempt->completed_at) : null;
                     if ($start && $end) {
-                    $seconds = $start->diffInSeconds($end);
-                    $minutesFloat = $seconds / 60;
-                    $timeTaken = number_format($minutesFloat, 2, '.', '');
+                        $seconds = $start->diffInSeconds($end);
+                        $minutesFloat = $seconds / 60;
+                        $timeTaken = number_format($minutesFloat, 2, '.', '');
                     } else {
-                    $timeTaken = null;
+                        $timeTaken = null;
                     }
                     @endphp
 
@@ -322,12 +363,17 @@
             @endphp
 
             <div class="flex items-center justify-between px-4 py-8">
-                <a href="{{ route('quizzes.result_index', $quiz->id) }}"
+                @php
+                    $baseRoute = route('quizzes.result_index', $quiz->id);
+                    $backUrl = (!empty($isAdmin) && !empty($viewedUser))
+                        ? $baseRoute . '?user_id=' . $viewedUser->id
+                        : $baseRoute;
+                @endphp
+
+                <a href="{{ $backUrl }}"
                     class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                    Back to Results
+                    Back to All Attempts
                 </a>
-
-
             </div>
         </div>
     </div>

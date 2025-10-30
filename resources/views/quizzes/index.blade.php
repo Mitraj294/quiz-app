@@ -35,11 +35,10 @@
                                     <a href="{{ route('quizzes.show', $quiz->id) }}" 
                                        class="block p-4 border border-gray-300 rounded-lg hover:{{ $isAdmin ? 'bg-gray-50' : 'bg-blue-50' }} transition">
                                         <h4 class="font-semibold mb-2">{{ $quiz->name }}</h4>
-                                        
                                         @if($quiz->description)
                                             <p class="text-sm text-gray-600 mb-2">{{ Str::limit($quiz->description, 120) }}</p>
                                         @endif
-                                        
+                              
                                         @if(!$isAdmin)
                                             <span class="inline-flex items-center text-sm text-blue-600 font-medium">
                                                 Quiz Details

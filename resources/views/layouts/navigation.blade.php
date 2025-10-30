@@ -17,7 +17,7 @@
                     </x-nav-link>
 
                     @if(Auth::check() && Auth::user()->isAdmin())
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*') && !( ((request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()) )">
                             {{ __('Manage Quiz') }}
                         </x-nav-link>
                         <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
@@ -26,7 +26,7 @@
                         <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/users')" :active="request()->is('users*')">
                             {{ __('Manage Users') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900 border-b-2 border-indigo-500" :href="url('/admin/analytics')" :active="request()->is('admin/analytics')">
+                        <x-nav-link class="text-lg font-bold text-gray-900 border-b-2 border-indigo-500" :href="url('/admin/analytics')" :active="(request()->is('admin/analytics*') || request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()">
                             {{ __('Analytics') }}
                         </x-nav-link>
                     @else

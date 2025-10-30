@@ -50,28 +50,40 @@
                     <div class="mb-2">
                         <p class="text-gray-800">{{ $topic->description ?? $topic->name }}</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-1  gap-4">
-                        @if(!empty($topic->children) && $topic->children->isNotEmpty())
-                            <div class="mt-2">
-                                <h4 class="text-lg font-semibold mb-4">Subtopic</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    @foreach($topic->children as $sub)
-                                    <div>
-                                        <div class="block text-left w-full p-4 border border-gray-300 rounded-lg bg-gray-50">
-                                            <h5 class="font-semibold mb-2">{{ $sub->name }}</h5>
-                                            <p class="text-sm text-gray-700">{{ $sub->description ?? $sub->name }}</p>
+                    <div class="flex gap-3 mt-3">
+                        <a href="{{ url('/topics/' . $topic->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                    </div>
+                    @php
+                        $quizStats = $topicQuizStats[$topic->id] ?? [];
+                        $hasChildren = !empty($topic->children) && $topic->children->isNotEmpty();
+                        $hasQuizzes = !empty($quizStats) && count($quizStats) > 0;
+                    @endphp
+
+                    <div class="grid grid-cols-1 {{ ($hasChildren && $hasQuizzes) ? 'md:grid-cols-2' : 'md:grid-cols-1' }} gap-4">
+                        @if($hasChildren)
+                        <div class="mt-2 p-3 border border-gray-100 bg-gray-50 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-4">Subtopic</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach($topic->children as $sub)
+                                <div>
+                                    <div class="block text-left w-full p-4 border border-gray-100 rounded-lg bg-white">
+                                        <h5 class="font-semibold mb-2">{{ $sub->name }}</h5>
+                                        <p class="text-sm text-gray-700">{{ $sub->description ?? $sub->name }}</p>
+                                        <div class="flex gap-3 mt-3">
+                                            <a href="{{ url('/topics/' . $sub->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                                         </div>
                                     </div>
-                                    @endforeach
                                 </div>
+                                @endforeach
                             </div>
+                        </div>
                         @endif
-                        <div class="mt-2">
+
+                        <div class="mt-2 p-3 border border-gray-100 bg-gray-50 rounded-lg">
                             <h4 class="text-lg font-semibold mb-4">Related Quizzes</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @php $quizStats = $topicQuizStats[$topic->id] ?? []; @endphp
                                 @forelse($quizStats as $quiz)
-                                <div class="border border-gray-300 rounded-lg p-4 hover:shadow-md transition">
+                                <div class="border border-gray-100 rounded-lg p-4 hover:shadow-sm transition bg-white">
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
                                             <h5 class="font-semibold mb-2">{{ $quiz['title'] }}</h5>

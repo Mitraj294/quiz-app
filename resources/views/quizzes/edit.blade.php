@@ -88,9 +88,7 @@
                     </div>
                 </form>
                 
-                <div class="mt-6">
-                    @include('quizzes._authors', ['quiz' => $quiz, 'users' => $users])
-                </div>
+              
             </div>
         </div>
     </div>
