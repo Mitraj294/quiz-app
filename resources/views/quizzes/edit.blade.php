@@ -74,10 +74,14 @@
 
                     <div class="mb-4">
                         <label for="topic_id" class="block text-sm font-medium mb-2">Attach Topic (optional)</label>
+                        @php
+                            // Single-select: prefer old input, fall back to the first attached topic's id (if any)
+                            $selectedTopicId = old('topic_id', optional($quiz->topics->first())->id);
+                        @endphp
                         <select id="topic_id" name="topic_id" class="w-full  mx-auto rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             <option value="">-- Keep existing --</option>
                             @foreach($topics as $topic)
-                                <option value="{{ $topic->id }}" {{ $quiz->topics->contains($topic) ? 'selected' : '' }}>{{ $topic->name }}</option>
+                                <option value="{{ $topic->id }}" {{ (string) $topic->id === (string) $selectedTopicId ? 'selected' : '' }}>{{ $topic->name }}</option>
                             @endforeach
                         </select>
                     </div>

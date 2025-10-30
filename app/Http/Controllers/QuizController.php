@@ -12,12 +12,6 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-/**
- * QuizController
- *
- * Note: this application stores `duration` and `time_between_attempts` in minutes.
- * The UI expects and displays values in minutes and the controller persists them as minutes.
- */
 class QuizController extends Controller
 {
     // Reusable validation rule fragments to avoid duplicated literals
@@ -28,35 +22,34 @@ class QuizController extends Controller
     private const RULE_NULLABLE_BOOLEAN = 'nullable|boolean';
     private const RULE_REQUIRED_STRING_MAX255 = 'required|string|max:255';
     private const RULE_NULLABLE_DATE = 'nullable|date';
+    private const QUESTION_TYPES = [
+        1 => 'multiple_choice_single_answer',
+        2 => 'multiple_choice_multiple_answer',
+        3 => 'fill_the_blank',
+    ];
 
-    /**
-     * List all quizzes with their topics
-     *
-     * @return View
-     */
     public function index(): View
     {
-        $quizzes = Quiz::with('topics')->latest()->get();
-        return view('quizzes.index', compact('quizzes'));
+        $user = Auth::user();
+        // Safely determine admin status. Use method_exists() to satisfy static analysis tools
+        $isAdmin = Auth::check() && $user instanceof \App\Models\User && method_exists($user, 'isAdmin') && $user->isAdmin();
+
+        if ($isAdmin) {
+            $quizzes = Quiz::with('topics')->latest()->get();
+        } else {
+            // non-admins only see published quizzes
+            $quizzes = Quiz::with('topics')->where('is_published', 1)->latest()->get();
+        }
+
+        return view('quizzes.index', compact('quizzes', 'isAdmin'));
     }
 
-    /**
-     * Show quiz creation form
-     *
-     * @return View
-     */
     public function create(): View
     {
         $topics = Topic::orderBy('name')->get();
         return view('quizzes.create', compact('topics'));
     }
 
-    /**
-     * Store a new quiz.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function store(Request $request): RedirectResponse
     {
         // Validation rules depend on topic_option
@@ -148,12 +141,6 @@ class QuizController extends Controller
             ->with('success', 'Quiz created successfully!');
     }
 
-    /**
-     * Show the quiz edit form to admins
-     *
-     * @param Quiz $quiz
-     * @return View
-     */
     public function edit(Quiz $quiz): View
     {
         $topics = Topic::orderBy('name')->get();
@@ -161,13 +148,6 @@ class QuizController extends Controller
         return view('quizzes.edit', compact('quiz', 'topics', 'users'));
     }
 
-    /**
-     * Update quiz fields
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function update(Request $request, Quiz $quiz): RedirectResponse
     {
         $rules = [
@@ -222,15 +202,14 @@ class QuizController extends Controller
 
         // Attach or sync topic if provided
         if (! empty($data['topic_id'])) {
-            $quiz->topics()->syncWithoutDetaching([$data['topic_id']]);
+            // Replace previous topic associations with the newly selected topic
+            // (the UI select is single-choice). Use sync() so old topics are removed.
+            $quiz->topics()->sync([$data['topic_id']]);
         }
 
         return redirect()->route('quizzes.show', $quiz->id)->with('success', 'Quiz updated successfully');
     }
 
-    /**
-     * Generate a unique slug for the quiz name.
-     */
     private function generateUniqueSlug(string $name): string
     {
         $slug = Str::slug($name);
@@ -243,17 +222,11 @@ class QuizController extends Controller
         return $slug;
     }
 
-    
 
-    /**
-     * Show quiz details with questions and topics
-     *
-     * @param Quiz $quiz
-     * @return View
-     */
+
     public function show(Quiz $quiz): View
     {
-        // Manually fetch topics for this quiz due to polymorphic namespace mismatch
+        // Fetch topics for this quiz (polymorphic pivot stores multiple model namespaces)
         $topicIds = DB::table('topicables')
             ->where('topicable_id', $quiz->id)
             ->whereIn('topicable_type', ['App\Models\Quiz', 'Harishdurga\LaravelQuiz\Models\Quiz'])
@@ -265,20 +238,60 @@ class QuizController extends Controller
         // Load quiz_questions with their related question data and options
         $quiz->load(['questions.question.options']);
 
-        return view('quizzes.show', compact('quiz'));
+        // Prepare computed values that were previously in the Blade view
+        $now = \Carbon\Carbon::now('UTC');
+
+        // Questions counts
+        $totalQuestions = $quiz->questions->count();
+        $mandatoryCount = $quiz->questions->where('is_optional', false)->count();
+        $optionalCount = $quiz->questions->where('is_optional', true)->count();
+
+        // User attempts/retake info (computed in helper to reduce complexity)
+        [$userAttempts, $attempts, $remainingSeconds, $canRetake] = $this->getAttemptStats($quiz, $now);
+
+        // Computed marks and pass marks
+        $computedTotalMarks = $quiz->questions->sum('marks');
+        $computedPassMarks = (int) round($computedTotalMarks / 3);
+
+        // Expiry
+        $isExpired = false;
+        if (! empty($quiz->valid_upto)) {
+            try {
+                $validUpto = \Carbon\Carbon::parse($quiz->valid_upto, 'UTC');
+                if ($now->gt($validUpto)) {
+                    $isExpired = true;
+                }
+            } catch (\Exception $e) {
+                // ignore parse errors and treat as not expired
+            }
+        }
+
+        if ($isExpired) {
+            $canRetake = false;
+        }
+
+        $validUptoUtc = $quiz->valid_upto ? \Carbon\Carbon::parse($quiz->valid_upto)->setTimezone('UTC')->toIso8601String() : '';
+
+        return view('quizzes.show', compact(
+            'quiz',
+            'totalQuestions',
+            'mandatoryCount',
+            'optionalCount',
+            'userAttempts',
+            'computedTotalMarks',
+            'computedPassMarks',
+            'isExpired',
+            'validUptoUtc',
+            'remainingSeconds',
+            'canRetake',
+            'attempts'
+        ));
     }
 
 
-    /**
-     * Show a list of existing questions (from topics attached to this quiz)
-     * so an admin can select and attach them to the quiz.
-     *
-     * @param Quiz $quiz
-     * @return View|RedirectResponse
-     */
-    public function selectQuestions(Quiz $quiz)
+    public function selectQuestions(Quiz $quiz): View
     {
-        // Manually fetch topic IDs for this quiz due to polymorphic namespace mismatch
+        // Fetch topic IDs for this quiz
         $topicIds = DB::table('topicables')
             ->where('topicable_id', $quiz->id)
             ->whereIn('topicable_type', ['App\Models\Quiz', 'Harishdurga\LaravelQuiz\Models\Quiz'])
@@ -312,67 +325,34 @@ class QuizController extends Controller
         return view('quizzes.select_questions', compact('quiz', 'questions', 'attachedQuestions'));
     }
 
-    /**
-     * Show form to create a new question and attach it directly to the quiz.
-     *
-     * @param Quiz $quiz
-     * @return View
-     */
     public function createQuestion(Quiz $quiz): View
     {
-        $questionTypes = [
-            1 => 'multiple_choice_single_answer',
-            2 => 'multiple_choice_multiple_answer',
-            3 => 'fill_the_blank',
-        ];
-
-        return view('quizzes.create_question', compact('quiz', 'questionTypes'));
+        return view('quizzes.create_question', [
+            'quiz' => $quiz,
+            'questionTypes' => self::QUESTION_TYPES,
+        ]);
     }
 
-    /**
-     * Show the edit form for a question within the quiz context (allows editing both question and quiz-specific settings)
-     *
-     * @param Quiz $quiz
-     * @param int $questionId
-     * @return View
-     */
-    public function editQuestion(Quiz $quiz, $questionId): View
+    public function editQuestion(Quiz $quiz, int $questionId): View
     {
         $question = \Harishdurga\LaravelQuiz\Models\Question::with('options', 'question_type')->findOrFail($questionId);
-
-        // Load the quiz-specific pivot data if it exists
         $quizQuestion = \App\Models\QuizQuestion::where('quiz_id', $quiz->id)->where('question_id', $questionId)->first();
 
-        $questionTypes = [
-            1 => 'multiple_choice_single_answer',
-            2 => 'multiple_choice_multiple_answer',
-            3 => 'fill_the_blank',
-        ];
-
-        // Map the vendor question_type name to numeric key
-        $typeMap = [
-            'multiple_choice_single_answer' => 1,
-            'multiple_choice_multiple_answer' => 2,
-            'fill_the_blank' => 3,
-        ];
-
         $currentType = 1;
-        if ($question->relationLoaded('question_type') && $question->question_type) {
-            $currentType = $typeMap[$question->question_type->name] ?? 1;
+        if ($question->question_type && $question->question_type->name) {
+            $currentType = array_search($question->question_type->name, self::QUESTION_TYPES, true) ?: 1;
         }
 
-        return view('quizzes.edit_question', compact('quiz', 'question', 'quizQuestion', 'questionTypes', 'currentType'));
+        return view('quizzes.edit_question', [
+            'quiz' => $quiz,
+            'question' => $question,
+            'quizQuestion' => $quizQuestion,
+            'questionTypes' => self::QUESTION_TYPES,
+            'currentType' => $currentType,
+        ]);
     }
 
-    /**
-     * Update a question and its quiz-specific settings
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @param int $questionId
-     * @return RedirectResponse
-     */
-    public function updateQuestion(Request $request, Quiz $quiz, $questionId): RedirectResponse
+    public function updateQuestion(Request $request, Quiz $quiz, int $questionId): RedirectResponse
     {
         $rules = [
             'question_type' => 'required|in:1,2,3',
@@ -425,37 +405,32 @@ class QuizController extends Controller
             ->with('success', 'Question and quiz settings updated successfully');
     }
 
-    /**
-     * Resolve numeric question_type to the vendor string name
-     */
     private function questionTypeName(int $type): string
     {
-        return [
-            1 => 'multiple_choice_single_answer',
-            2 => 'multiple_choice_multiple_answer',
-            3 => 'fill_the_blank',
-        ][$type] ?? 'Unknown';
+        return self::QUESTION_TYPES[$type] ?? 'Unknown';
     }
 
-    /**
-     * Persist question options depending on type (MCQ or text answer)
-     */
     private function persistQuestionOptions(int $questionId, int $type, array $options = [], array $correct = [], ?string $textAnswer = null): void
     {
-        // Delete all existing options first
         \Harishdurga\LaravelQuiz\Models\QuestionOption::where('question_id', $questionId)->delete();
 
-        if (in_array($type, [1, 2])) {
+        if (in_array($type, [1, 2], true)) {
             foreach ($options as $idx => $opt) {
-                if (! empty($opt)) {
-                    \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
-                        'question_id' => $questionId,
-                        'name' => $opt,
-                        'is_correct' => in_array($idx, $correct),
-                    ]);
+                if ($opt === '' || $opt === null) {
+                    continue;
                 }
+
+                \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
+                    'question_id' => $questionId,
+                    'name' => $opt,
+                    'is_correct' => in_array($idx, $correct, true),
+                ]);
             }
-        } elseif ($type == 3 && ! empty($textAnswer)) {
+
+            return;
+        }
+
+        if ($type === 3 && ! empty($textAnswer)) {
             \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
                 'question_id' => $questionId,
                 'name' => $textAnswer,
@@ -464,13 +439,6 @@ class QuizController extends Controller
         }
     }
 
-    /**
-     * Store a new question and attach to both questions table and quiz_questions pivot.
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
     {
         $data = $request->validate([
@@ -488,9 +456,8 @@ class QuizController extends Controller
             'media_type' => self::RULE_NULLABLE_STRING,
         ]);
 
-        // create the question using vendor model
         $questionTypeModel = \Harishdurga\LaravelQuiz\Models\QuestionType::firstOrCreate([
-            'name' => [1 => 'multiple_choice_single_answer', 2 => 'multiple_choice_multiple_answer', 3 => 'fill_the_blank'][$data['question_type']] ?? 'Unknown'
+            'name' => self::QUESTION_TYPES[$data['question_type']] ?? 'Unknown'
         ]);
 
         $question = \Harishdurga\LaravelQuiz\Models\Question::create([
@@ -510,23 +477,22 @@ class QuizController extends Controller
             }
         }
 
-        // Store options
-        if (in_array($data['question_type'], [1, 2])) {
+        if (in_array($data['question_type'], [1, 2], true)) {
             $correct = $data['correct'] ?? [];
-            if (! empty($data['options'])) {
-                foreach ($data['options'] as $idx => $opt) {
-                    if (! empty($opt)) {
-                        \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
-                            'question_id' => $question->id,
-                            'name' => $opt,
-                            'is_correct' => in_array($idx, $correct),
-                        ]);
-                    }
+            foreach ($data['options'] ?? [] as $idx => $opt) {
+                if ($opt === '' || $opt === null) {
+                    continue;
                 }
+
+                \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
+                    'question_id' => $question->id,
+                    'name' => $opt,
+                    'is_correct' => in_array($idx, $correct, true),
+                ]);
             }
         }
 
-        if ($data['question_type'] == 3 && ! empty($data['text_answer'])) {
+        if ($data['question_type'] === 3 && ! empty($data['text_answer'])) {
             \Harishdurga\LaravelQuiz\Models\QuestionOption::create([
                 'question_id' => $question->id,
                 'name' => $data['text_answer'],
@@ -551,20 +517,8 @@ class QuizController extends Controller
         return redirect()->route('quizzes.show', $quiz->id)->with('success', 'Question created and attached to quiz');
     }
 
-    /**
-     * Attach selected existing questions to the quiz with their settings.
-     * Updates existing questions or creates new ones.
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function attachQuestions(Request $request, Quiz $quiz): RedirectResponse
     {
-        Log::info('=== ATTACH QUESTIONS CALLED ===');
-        Log::info('Quiz ID: ' . $quiz->id);
-        Log::info('Request Data:', $request->all());
-
         try {
             $data = $request->validate([
                 'question_ids' => 'required|array',
@@ -576,16 +530,11 @@ class QuizController extends Controller
                 'is_optional' => self::RULE_NULLABLE_ARRAY,
                 'is_optional.*' => self::RULE_NULLABLE_BOOLEAN,
             ]);
-
-            Log::info('Validation passed. Validated data:', $data);
+            // validated
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed:', $e->errors());
+            Log::error('Validation failed in attachQuestions', $e->errors());
             throw $e;
         }
-
-        Log::info('Processing ' . count($data['question_ids']) . ' questions');
-
-        // Update or create quiz_question records for each selected question
         foreach ($data['question_ids'] as $questionId) {
             $questionData = [
                 'marks' => $data['marks'][$questionId] ?? 1,
@@ -594,8 +543,6 @@ class QuizController extends Controller
                 'order' => 0,
             ];
 
-            Log::info("Attaching Question ID: $questionId", $questionData);
-
             \App\Models\QuizQuestion::updateOrCreate(
                 [
                     'quiz_id' => $quiz->id,
@@ -603,22 +550,13 @@ class QuizController extends Controller
                 ],
                 $questionData
             );
-
-            Log::info("Successfully attached Question ID: $questionId");
         }
 
         return redirect()->route('quizzes.show', $quiz->id)
             ->with('success', 'Questions attached/updated to quiz successfully');
     }
 
-    /**
-     * Detach a question from the quiz (remove from quiz_questions pivot table only)
-     *
-     * @param Quiz $quiz
-     * @param int $questionId
-     * @return RedirectResponse
-     */
-    public function detachQuestion(Quiz $quiz, $questionId): RedirectResponse
+    public function detachQuestion(Quiz $quiz, int $questionId): RedirectResponse
     {
         \App\Models\QuizQuestion::where('quiz_id', $quiz->id)
             ->where('question_id', $questionId)
@@ -627,12 +565,6 @@ class QuizController extends Controller
         return redirect()->back()->with('success', 'Question removed from quiz successfully');
     }
 
-    /**
-     * Delete a quiz
-     *
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function destroy(Quiz $quiz): RedirectResponse
     {
         $topicId = optional($quiz->topics->first())->id;
@@ -647,13 +579,6 @@ class QuizController extends Controller
             ->with('success', 'Quiz deleted successfully!');
     }
 
-    /**
-     * Toggle publish state for a quiz (admin only).
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function publish(Request $request, Quiz $quiz): RedirectResponse
     {
         // Toggle the boolean state
@@ -686,14 +611,9 @@ class QuizController extends Controller
         return redirect()->route('quizzes.show', $quiz->id)->with('success', $message);
     }
 
-    /**
-     * Show a paginated list of attempts for the current user for this quiz.
-     *
-     * @param Quiz $quiz
-     * @return View|RedirectResponse
-     */
-    public function resultIndex(Quiz $quiz)
+    public function resultIndex(Quiz $quiz): View|RedirectResponse
     {
+
         $userId = Auth::id();
         // If admin and user_id is provided, use that
         $authUser = Auth::user();
@@ -720,5 +640,46 @@ class QuizController extends Controller
             ->paginate(15);
 
         return view('quizzes.result_index', compact('quiz', 'attempts'));
+    }
+
+    /**
+     * Compute attempt-related stats for the current authenticated user.
+     * Returns array: [userAttempts, attempts, remainingSeconds, canRetake]
+     */
+    private function getAttemptStats(Quiz $quiz, \Carbon\Carbon $now): array
+    {
+        $userAttempts = 0;
+        $attempts = 0;
+        $remainingSeconds = 0;
+        $canRetake = true;
+
+        if (Auth::check()) {
+            $userAttempts = \App\Models\Attempt::where('quiz_id', $quiz->id)
+                ->where('user_id', Auth::id())
+                ->whereNotNull('completed_at')
+                ->count();
+
+            $attempts = $userAttempts;
+
+            $lastAttempt = \App\Models\Attempt::where('quiz_id', $quiz->id)
+                ->where('user_id', Auth::id())
+                ->whereNotNull('completed_at')
+                ->orderByDesc('completed_at')
+                ->first();
+
+            if ($quiz->time_between_attempts && $lastAttempt) {
+                try {
+                    $lockUntil = \Carbon\Carbon::parse($lastAttempt->completed_at, 'UTC')->addMinutes($quiz->time_between_attempts);
+                    if ($now->lt($lockUntil)) {
+                        $canRetake = false;
+                        $remainingSeconds = $now->diffInSeconds($lockUntil);
+                    }
+                } catch (\Exception $e) {
+                    // ignore parse errors and allow retake
+                }
+            }
+        }
+
+        return [$userAttempts, $attempts, $remainingSeconds, $canRetake];
     }
 }

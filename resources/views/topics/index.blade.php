@@ -58,17 +58,6 @@
                     @if(isset($topics) && $topics->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($topics as $topic)
-                            @php
-                                $user = Auth::user();
-                                // direct quizzes count (from eager loaded quizzes_count)
-                                $directQuizzes = isset($topic->quizzes_count) ? $topic->quizzes_count : 0;
-                                $publishedDirectQuizzes = isset($topic->quizzes) ? $topic->quizzes->where('is_published', 1)->count() : 0;
-                                // subtopics count
-                                $subCount = isset($topic->children) ? $topic->children->count() : 0;
-                                // total quizzes in immediate subtopics (from eager loaded quizzes_count)
-                                $subQuizzes = $subCount > 0 ? $topic->children->sum('quizzes_count') : 0;
-                                $publishedSubQuizzes = $subCount > 0 ? $topic->children->flatMap(function($child){ return isset($child->quizzes) ? $child->quizzes : collect(); })->where('is_published', 1)->count() : 0;
-                            @endphp
 
                             <a href="{{ route('topics.show', $topic->id) }}" class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                 <h4 class="font-semibold mb-2">{{ $topic->name }}</h4>
@@ -79,25 +68,25 @@
 
                                 <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
                                     <span class="px-2 py-1 bg-gray-100 rounded">
-                                        @if($user && $user->isAdmin())
-                                            Quiz: {{ $directQuizzes }}
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Quiz: {{ $topic->all_quizzes_count ?? 0 }}
                                         @else
-                                            Quiz: {{ $publishedDirectQuizzes }}
+                                            Quiz: {{ $topic->published_quizzes_count ?? 0 }}
                                         @endif
                                     </span>
-                                    <span class="px-2 py-1 bg-gray-100 rounded">Subtopics: {{ $subCount }}</span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded">Subtopics: {{ $topic->children->count() }}</span>
                                     <span class="px-2 py-1 bg-gray-100 rounded">
-                                        @if($user && $user->isAdmin())
-                                            Quizzes in subtopics: {{ $subQuizzes }} 
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Quizzes in subtopics: {{ $topic->children->sum('all_quizzes_count') }}
                                         @else
-                                            Quizzes in subtopics: {{ $publishedSubQuizzes }}
+                                            Quizzes in subtopics: {{ $topic->children->sum('published_quizzes_count') }}
                                         @endif
                                     </span>
                                     <span class="px-2 py-1 bg-green-100 rounded font-semibold">
-                                        @if($user && $user->isAdmin())
-                                            Total quizzes: {{ $directQuizzes + $subQuizzes }} 
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Total quizzes: {{ $topic->total_quizzes ?? ($topic->all_quizzes_count + $topic->children->sum('all_quizzes_count')) }}
                                         @else
-                                            Total quizzes: {{ $publishedDirectQuizzes + $publishedSubQuizzes }}
+                                            Total quizzes: {{ $topic->published_total_quizzes ?? ($topic->published_quizzes_count + $topic->children->sum('published_quizzes_count')) }}
                                         @endif
                                     </span>
                                 </div>

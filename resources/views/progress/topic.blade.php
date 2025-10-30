@@ -14,27 +14,14 @@
                     <a href="{{ route('progress.topic') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
                         <div>
                             <h4 class="text-sm text-indigo-700 font-semibold">Topics</h4>
-                            @php
-                            $userTopicCount = Auth::user()->attempts()->whereNotNull('completed_at')
-                            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-                            ->join('topicables', function($join) {
-                            $join->on('quizzes.id', '=', 'topicables.topicable_id')
-                            ->where('topicables.topicable_type', 'App\\Models\\Quiz');
-                            })
-                            ->distinct('topicables.topic_id')
-                            ->count('topicables.topic_id');
-                            @endphp
-                            <div class="text-2xl font-bold text-indigo-800">{{ $userTopicCount }}</div>
+                            <div class="text-2xl font-bold text-indigo-800">{{ $userTopicCount ?? 0 }}</div>
                             <p class="text-sm text-indigo-700 mt-2">Topics you've participated in</p>
                         </div>
                     </a>
                     <!-- Quizzes Overview -->
                     <a href="{{ route('progress.quiz') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                         <h4 class="text-sm text-gray-500">Quizzes</h4>
-                        @php
-                        $userQuizCount = Auth::user()->attempts()->whereNotNull('completed_at')->distinct('quiz_id')->count('quiz_id');
-                        @endphp
-                        <div class="text-2xl font-bold">{{ $userQuizCount }}</div>
+                        <div class="text-2xl font-bold">{{ $userQuizCount ?? 0 }}</div>
                         <p class="text-sm text-gray-600 mt-2">Quizzes you've completed</p>
                     </a>
                 </div>
@@ -53,20 +40,11 @@
                             <p class="text-gray-800">{{ $topic->description ?? $topic->name }}</p>
                         </div>
                         <div class="flex gap-3 mt-3">
-                            <a href="{{ url('/topics/' . $topic->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                            <a href="{{ route('topics.show', $topic->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                         </div>
                         @php
                         $hasSubtopics = $topic->children->isNotEmpty();
-                        $userQuizIds = \App\Models\Attempt::where('user_id', Auth::id())
-                        ->whereNotNull('completed_at')
-                        ->pluck('quiz_id')->unique()->values()->all();
-                        $topicableIds = \DB::table('topicables')
-                        ->where('topic_id', $topic->id)
-                        ->where('topicable_type', 'App\\Models\\Quiz')
-                        ->pluck('topicable_id')->all();
-                        $relatedQuizzes = \App\Models\Quiz::whereIn('id', $topicableIds)
-                        ->whereIn('id', $userQuizIds)
-                        ->get();
+                        $relatedQuizzes = $topic->related_quizzes ?? collect();
                         $hasRelated = $relatedQuizzes->isNotEmpty();
                         @endphp
                         <div class="grid grid-cols-1 {{ ($hasSubtopics && $hasRelated) ? 'md:grid-cols-2' : 'md:grid-cols-1' }} gap-4">
@@ -81,7 +59,7 @@
                                             <h5 class="font-semibold mb-2">{{ $sub->name }}</h5>
                                             <p class="text-sm text-gray-700">{{ $sub->description ?? $sub->name }}</p>
                                             <div class="flex gap-3 mt-3">
-                                                <a href="{{ url('/topics/' . $sub->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                                                <a href="{{ route('topics.show', $sub->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                                             </div>
                                         </div>
                                     </div>
@@ -106,7 +84,7 @@
                                             </div>
                                         </div>
                                         <div class="flex gap-3 mt-3">
-                                            <a href="{{ url('/quizzes/' . $quiz->id . '/results') }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                                            <a href="{{ route('quizzes.result_index', ['quiz' => $quiz->id]) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                                         </div>
                                     </div>
                                     @empty
@@ -139,19 +117,14 @@
                     <p class="text-gray-800">{{ $topic->description ?? $topic->name }}</p>
                 </div>
                 <div class="flex gap-3 mt-3">
-                    <a href="{{ url('/topics/' . $topic->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                    <a href="{{ route('topics.show', $topic->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                 </div>
 
-                @php
-                    $hasSubtopics = $topic->children->isNotEmpty();
-                    $topicableIds = \DB::table('topicables')
-                    ->where('topic_id', $topic->id)
-                    ->where('topicable_type', 'App\\Models\\Quiz')
-                    ->pluck('topicable_id')
-                    ->all();
-                    $relatedQuizzes = \App\Models\Quiz::whereIn('id', $topicableIds)->get();
-                    $hasRelated = $relatedQuizzes->isNotEmpty();
-                @endphp
+                                    @php
+                                    $hasSubtopics = $topic->children->isNotEmpty();
+                                    $relatedQuizzes = $topic->related_quizzes ?? collect();
+                                    $hasRelated = $relatedQuizzes->isNotEmpty();
+                                    @endphp
 
                 <div class="grid grid-cols-1 {{ ($hasSubtopics && $hasRelated) ? 'md:grid-cols-2' : 'md:grid-cols-1' }} gap-4 mt-6">
                     <!-- Subtopics -->
@@ -161,17 +134,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($topic->children as $sub)
                         @php
-                            $subQuizIds = \DB::table('topicables')
-                            ->where('topic_id', $sub->id)
-                            ->where('topicable_type', 'App\\Models\\Quiz')
-                            ->pluck('topicable_id')
-                            ->all();
-                            $subTotal = count($subQuizIds);
-                            $subAttempted = \App\Models\Attempt::where('user_id', Auth::id())
-                            ->whereNotNull('completed_at')
-                            ->whereIn('quiz_id', $subQuizIds)
-                            ->distinct()
-                            ->count('quiz_id');
+                            $subTotal = $sub->subTotal ?? 0;
+                            $subAttempted = $sub->subAttempted ?? 0;
                         @endphp
                         <div>
                             <div class="block text-left w-full p-4 border border-gray-100 rounded-lg bg-white">
@@ -185,7 +149,7 @@
                                 @endif
                             </div>
                             <div class="flex gap-3 mt-3">
-                                <a href="{{ url('/topics/' . $sub->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                                <a href="{{ route('topics.show', $sub->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                             </div>
                             </div>
                         </div>
@@ -200,13 +164,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @forelse($relatedQuizzes as $quiz)
                         @php
-                            $attempt = \App\Models\Attempt::where('user_id', Auth::id())
-                            ->where('quiz_id', $quiz->id)
-                            ->whereNotNull('completed_at')
-                            ->orderByDesc('completed_at')
-                            ->first();
-                            $score = $attempt ? ($attempt->score ?? $attempt->marks ?? $attempt->marks_obtained ?? null) : null;
-                            $passed = (!is_null($score) && !is_null($quiz->pass_marks)) ? ($score >= $quiz->pass_marks) : null;
+                            $attempt = $quiz->last_attempt ?? null;
+                            $score = $quiz->last_score ?? null;
+                            $passed = $quiz->last_passed ?? null;
                         @endphp
 
                         <div class="border border-gray-100 rounded-lg p-4 hover:shadow-sm transition bg-white">
@@ -241,7 +201,7 @@
                             </div>
 
                             <div class="flex gap-3 mt-3">
-                                <a href="{{ url('/quizzes/' . $quiz->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">Attempt Quiz</a>
+                                <a href="{{ route('quizzes.show', $quiz->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">Attempt Quiz</a>
                             </div>
                         </div>
                         @empty

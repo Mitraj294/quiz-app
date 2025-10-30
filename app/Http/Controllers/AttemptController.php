@@ -13,20 +13,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
-/**
- * AttemptController
- * 
- * Handles quiz attempt lifecycle: start, submit, and view results.
- */
 class AttemptController extends Controller
 {
-    /**
-     * Show the quiz-taking page for users
-     *
-     * @param Quiz $quiz
-     * @return View|RedirectResponse
-     */
-    public function start(Quiz $quiz)
+    public function start(Quiz $quiz): View|RedirectResponse
     {
         $quiz->load(['questions.question.options', 'questions.question.question_type']);
 
@@ -54,13 +43,26 @@ class AttemptController extends Controller
             'passed' => 0,
             'completed_at' => null,
         ]);
-        return view($viewName, compact('quiz', 'attempt'));
+
+        // Prepare view-level computed values (moved from Blade):
+        // remainingSeconds: prefer attempt->ends_at if available (legacy), else quiz duration
+        $remainingSeconds = $quiz->duration > 0 ? ($quiz->duration * 60) : 0;
+        if (isset($attempt->ends_at) && ! empty($attempt->ends_at)) {
+            try {
+                $remainingSeconds = max(0, Carbon::parse($attempt->ends_at, 'UTC')->diffInSeconds(Carbon::now('UTC')));
+            } catch (\Exception $e) {
+                // ignore and keep duration-based remainingSeconds
+            }
+        }
+
+        $computedTotalMarks = $quiz->questions->sum('marks');
+        $computedPassMarks = (int) round($computedTotalMarks / 3);
+        $totalQuestions = $quiz->questions->count();
+
+        return view($viewName, compact('quiz', 'attempt', 'remainingSeconds', 'computedTotalMarks', 'computedPassMarks', 'totalQuestions'));
     }
 
-    /**
-     * Helper: Check if quiz has no questions
-     */
-    private function checkNoQuestions(Quiz $quiz)
+    private function checkNoQuestions(Quiz $quiz): ?RedirectResponse
     {
         if ($quiz->questions->isEmpty()) {
             return redirect()->route('quizzes.show', $quiz->id)
@@ -69,10 +71,7 @@ class AttemptController extends Controller
         return null;
     }
 
-    /**
-     * Helper: Check max attempts per user
-     */
-    private function checkMaxAttempts(Quiz $quiz)
+    private function checkMaxAttempts(Quiz $quiz): ?RedirectResponse
     {
         if ($quiz->max_attempts > 0) {
             $attemptCount = Attempt::where('quiz_id', $quiz->id)
@@ -86,10 +85,7 @@ class AttemptController extends Controller
         return null;
     }
 
-    /**
-     * Helper: Enforce cooldown between attempts
-     */
-    private function checkCooldown(Quiz $quiz)
+    private function checkCooldown(Quiz $quiz): ?RedirectResponse
     {
         if ($quiz->time_between_attempts && Auth::check()) {
             $lastAttempt = Attempt::where('quiz_id', $quiz->id)
@@ -114,13 +110,6 @@ class AttemptController extends Controller
         return null;
     }
 
-    /**
-     * Submit quiz attempt and calculate score
-     *
-     * @param Request $request
-     * @param Quiz $quiz
-     * @return RedirectResponse
-     */
     public function submit(Request $request, Quiz $quiz): RedirectResponse
     {
         $request->validate([
@@ -196,14 +185,7 @@ class AttemptController extends Controller
         }
     }
 
-    /**
-     * Show a detailed result for a specific attempt.
-     *
-     * @param Quiz $quiz
-     * @param Attempt $attempt
-     * @return View|RedirectResponse
-     */
-    public function show(Quiz $quiz, \App\Models\Attempt $attempt)
+    public function show(Quiz $quiz, Attempt $attempt)
     {
         // Ensure attempt belongs to quiz
         if ($attempt->quiz_id !== $quiz->id) {
@@ -226,10 +208,6 @@ class AttemptController extends Controller
         ]);
     }
 
-    /**
-     * Persist answers for an attempt and calculate total score.
-     * Returns the total earned score (float).
-     */
     private function processAttemptAndCalculateScore(Quiz $quiz, Attempt $attempt, array $answers): float
     {
         $totalScore = 0.0;
@@ -258,9 +236,6 @@ class AttemptController extends Controller
         return $attempt->score;
     }
 
-    /**
-     * Handle a fill-in-the-blank question: persist answer and return earned marks (float).
-     */
     private function processFillBlankQuestion($quizQuestion, Attempt $attempt, $userAnswer, bool $negEnabled): float
     {
         $question = $quizQuestion->question;
@@ -306,9 +281,6 @@ class AttemptController extends Controller
         return $earned;
     }
 
-    /**
-     * Handle MCQ (single/multiple) question: persist answers and return earned marks (float).
-     */
     private function processMcqQuestion($quizQuestion, Attempt $attempt, $userAnswer, bool $negEnabled): float
     {
         $question = $quizQuestion->question;

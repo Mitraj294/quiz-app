@@ -12,27 +12,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <a href="{{ route('progress.topic') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                         <h4 class="text-sm text-gray-500">Topics</h4>
-                        @php
-                        $userTopicCount = Auth::user()->attempts()->whereNotNull('completed_at')
-                        ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-                        ->join('topicables', function($join) {
-                        $join->on('quizzes.id', '=', 'topicables.topicable_id')
-                        ->where('topicables.topicable_type', 'App\\Models\\Quiz');
-                        })
-                        ->distinct('topicables.topic_id')
-                        ->count('topicables.topic_id');
-                        @endphp
-                        <div class="text-2xl font-bold">{{ $userTopicCount }}</div>
+                        <div class="text-2xl font-bold">{{ $userTopicCount ?? 0 }}</div>
                         <p class="text-sm text-gray-600 mt-2">Topics you've participated in</p>
                     </a>
                     <a href="{{ route('progress.quiz') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
                         <div class="flex items-start justify-between">
                             <div>
                                 <h4 class="text-sm text-indigo-700 font-semibold">Quizzes</h4>
-                                @php
-                                $userQuizCount = Auth::user()->attempts()->whereNotNull('completed_at')->distinct('quiz_id')->count('quiz_id');
-                                @endphp
-                                <div class="text-2xl font-bold text-indigo-800">{{ $userQuizCount }}</div>
+                                <div class="text-2xl font-bold text-indigo-800">{{ $userQuizCount ?? 0 }}</div>
                                 <p class="text-sm text-indigo-700 mt-2">Quizzes you've completed</p>
                             </div>
                         </div>
@@ -111,7 +98,7 @@
                         </div>
                         <x-utc-converter />
                         <div class="flex gap-3 mt-3">
-                            <a href="{{ url('/quizzes/' . $quiz->id . '/results') }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                            <a href="{{ route('quizzes.result_index', ['quiz' => $quiz->id]) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                         </div>
                     </div>
                     @empty

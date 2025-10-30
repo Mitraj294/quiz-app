@@ -162,8 +162,8 @@
 
                                 <div class="mt-3">
                                     @php
-                                    $totalQuizzes = isset($subTopic->quizzes) ? $subTopic->quizzes->count() : 0;
-                                    $publishedQuizzes = isset($subTopic->quizzes) ? $subTopic->quizzes->where('is_published', true)->count() : 0;
+                                        $totalQuizzes = $subTopic->all_quizzes_count ?? ($subTopic->quizzes->count() ?? 0);
+                                        $publishedQuizzes = $subTopic->published_quizzes_count ?? ($subTopic->quizzes->where('is_published', true)->count() ?? 0);
                                     @endphp
                                     @auth
                                     @if(Auth::user()->isAdmin())

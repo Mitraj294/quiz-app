@@ -23,34 +23,10 @@
                 </div>
                 @endif
 
-                    @php
-                    // Compute counts and marks dynamically from attached quiz questions.
-                    $totalQuestions = $quiz->questions->count();
-                    $mandatoryCount = $quiz->questions->where('is_optional', false)->count();
-                    $optionalCount = $quiz->questions->where('is_optional', true)->count();
-                    $userAttempts = auth()->check() ? \App\Models\Attempt::where('quiz_id', $quiz->id)->where('user_id', auth()->id())->whereNotNull('completed_at')->count() : 0;
-
-                    // Compute total marks from quiz_questions marks field and always display computed values.
-                    $computedTotalMarks = $quiz->questions->sum('marks');
-                    // Determine pass marks using business rule (one-third of total)
-                    $computedPassMarks = (int) round($computedTotalMarks / 3);
-
-                    // Determine if quiz has expired based on valid_upto
-                    // Treat stored valid_from/valid_upto as UTC in DB and compare in UTC
-                    $now = \Carbon\Carbon::now('UTC');
-                    $isExpired = false;
-                    if (!empty($quiz->valid_upto)) {
-                        try {
-                            $validUpto = \Carbon\Carbon::parse($quiz->valid_upto, 'UTC');
-                            if ($now->gt($validUpto)) {
-                                $isExpired = true;
-                            }
-                        } catch (\Exception $e) {
-                            // ignore parse errors and treat as not expired
-                        }
-                    }
-
-                    @endphp
+                    {{-- Computed values (counts, marks, attempts, expiry) prepared in controller as variables: 
+                         totalQuestions, mandatoryCount, optionalCount, userAttempts,
+                         computedTotalMarks, computedPassMarks, isExpired, validUptoUtc,
+                         remainingSeconds, canRetake, attempts --}}
 
 
                     <div class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -124,9 +100,6 @@
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Valid Upto</span>
-                        @php
-                            $validUptoUtc = $quiz->valid_upto ? \Carbon\Carbon::parse($quiz->valid_upto)->setTimezone('UTC')->toIso8601String() : '';
-                        @endphp
                         <p id="valid-upto-display" class="text-lg font-semibold {{ isset($isExpired) && $isExpired ? 'text-red-700' : '' }}" data-utc="{{ $validUptoUtc }}">
                             @if(!empty($quiz->valid_upto))
                                 <span class="no-js">{{ \Carbon\Carbon::parse($quiz->valid_upto)->toDayDateTimeString() }}</span>
@@ -206,13 +179,6 @@
                 @else
                 <!-- Regular user: show Start Quiz button -->
                 @if($quiz->questions->count() > 0 && $quiz->is_published)
-                @php
-                // Use application Attempt model directly to avoid vendor soft-delete scopes
-                $attempts = \App\Models\Attempt::where('quiz_id', $quiz->id)
-                    ->where('user_id', auth()->id())
-                    ->whereNotNull('completed_at')
-                    ->count();
-                @endphp
 
                 @if($attempts === 0)
                 <div class="flex gap-4">
@@ -238,35 +204,7 @@
                     @endif
 
                     <div class="flex-none">
-                        @php
-                        $canRetake = true;
-                        $remainingSeconds = 0;
-                        if(auth()->check()) {
-                            $lastAttempt = \App\Models\Attempt::where('quiz_id', $quiz->id)
-                                ->where('user_id', auth()->id())
-                                ->whereNotNull('completed_at')
-                                ->orderByDesc('completed_at')
-                                ->first();
-
-                            if($quiz->time_between_attempts && $lastAttempt) {
-                                try {
-                                    // treat completed_at as UTC and compute lock until in UTC
-                                    $lockUntil = \Carbon\Carbon::parse($lastAttempt->completed_at, 'UTC')->addMinutes($quiz->time_between_attempts);
-                                    if($now->lt($lockUntil)) {
-                                        $canRetake = false;
-                                        $remainingSeconds = $now->diffInSeconds($lockUntil);
-                                    }
-                                } catch(\Exception $e) {
-                                    // ignore parse errors and allow retake
-                                }
-                            }
-                        }
-
-                        // If quiz has expired, disallow retake
-                        if(isset($isExpired) && $isExpired) {
-                            $canRetake = false;
-                        }
-                        @endphp
+                   
 
                         @if(!($quiz->max_attempts && $attempts >= $quiz->max_attempts))
                             @if(isset($isExpired) && $isExpired)
@@ -452,7 +390,6 @@
             @endauth
         </div>
     </div>
-</x-app-layout>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -495,3 +432,4 @@
         var timer = setInterval(tick, 1000);
     });
 </script>
+</x-app-layout>

@@ -6,31 +6,48 @@ use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\User;
 use App\Models\Topic;
+use App\Models\Attempt;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class AnalyticsController extends Controller
 {
     // Constants
     private const TOPICABLE_TYPES = ['App\\Models\\Quiz', 'Harishdurga\\LaravelQuiz\\Models\\Quiz'];
 
-    /** Show topics analytics page. */
-    public function topics(Request $request)
+    /**
+     * Show topics analytics page.
+     */
+    public function topics(Request $request): View
     {
-        $topics = Topic::with('children')->whereNull('parent_id')->orderBy('name')->paginate(25);
+        $topics = Topic::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->paginate(25);
+
         $topicsCount = Topic::whereNull('parent_id')->count();
         $quizzesCount = Quiz::count();
-        $usersCountNonAdmin = User::whereDoesntHave('roles', fn($q) => $q->where('role', 'admin'))->count();
+        $usersCountNonAdmin = $this->countNonAdminUsers();
 
+        // Build quiz stats per topic (small dataset expected)
         $topicQuizStats = [];
         foreach ($topics as $topic) {
-            $topicableIds = DB::table('topicables')->where('topic_id', $topic->id)->pluck('topicable_id')->all();
+            $topicableIds = DB::table('topicables')
+                ->where('topic_id', $topic->id)
+                ->pluck('topicable_id')
+                ->all();
+
             $relatedQuizzes = Quiz::whereIn('id', $topicableIds)->get();
             $quizStats = [];
+
             foreach ($relatedQuizzes as $quiz) {
-                $totalMarks = DB::table('quiz_questions')->where('quiz_id', $quiz->id)->sum('marks');
+                $totalMarks = DB::table('quiz_questions')
+                    ->where('quiz_id', $quiz->id)
+                    ->sum('marks');
+
                 $passMarks = $quiz->pass_marks ?? (int) round($totalMarks / 3);
+
                 $quizStats[] = [
                     'id' => $quiz->id,
                     'title' => $quiz->title ?? $quiz->name,
@@ -38,6 +55,7 @@ class AnalyticsController extends Controller
                     'passMarks' => $passMarks,
                 ];
             }
+
             $topicQuizStats[$topic->id] = $quizStats;
         }
 
@@ -46,32 +64,41 @@ class AnalyticsController extends Controller
         ));
     }
 
-    /** Show quizzes analytics page. */
-    public function quizzes(Request $request)
+    /**
+     * Show quizzes analytics page.
+     */
+    public function quizzes(Request $request): View
     {
         $quizzes = Quiz::withCount('questions')->orderBy('name')->paginate(25);
         $topicsCount = Topic::whereNull('parent_id')->count();
         $quizzesCount = Quiz::count();
-        $usersCountNonAdmin = User::whereDoesntHave('roles', fn($q) => $q->where('role', 'admin'))->count();
+        $usersCountNonAdmin = $this->countNonAdminUsers();
 
         $quizStats = [];
+        $quizUserData = [];
         foreach ($quizzes as $quiz) {
             $totalQuestions = $quiz->questions_count ?? 0;
             $mandatory = $quiz->mandatory_questions_count ?? ($totalQuestions > 0 ? $totalQuestions - 1 : 0);
             $optional = $quiz->optional_questions_count ?? ($totalQuestions > 0 ? 1 : 0);
-            $totalMarks = DB::table('quiz_questions')->where('quiz_id', $quiz->id)->sum('marks');
+
+            $totalMarks = DB::table('quiz_questions')
+                ->where('quiz_id', $quiz->id)
+                ->sum('marks');
+
             $passMarks = (int) round($totalMarks / 3);
             $maxAttempts = $quiz->max_attempts ?? ($quiz->attempts_count > 0 ? $quiz->attempts_count : 1);
+
             $statusLabel = ($quiz->published ?? false)
                 ? '<span class="text-green-600">Published</span>'
                 : '<span class="text-gray-600">Draft</span>';
 
-            $storedAttempts = isset($quiz->attempts_count) ? (int)$quiz->attempts_count : null;
+            $storedAttempts = isset($quiz->attempts_count) ? (int) $quiz->attempts_count : null;
             $sumScores = DB::table('quiz_attempts')->where('quiz_id', $quiz->id)->sum('score');
             $attemptsCount = DB::table('quiz_attempts')->where('quiz_id', $quiz->id)->count();
             $average_score = $attemptsCount > 0 ? round($sumScores / $attemptsCount, 2) : null;
             $totalAttempts = ($storedAttempts > 0) ? $storedAttempts : $attemptsCount;
             $usersAttemptedFromTable = DB::table('quiz_attempts')->where('quiz_id', $quiz->id)->distinct()->count('user_id');
+
             $usersAttempted = $quiz->users_attempted_count
                 ?? $quiz->unique_attempts_count
                 ?? $quiz->attempts_users_count
@@ -92,18 +119,56 @@ class AnalyticsController extends Controller
             ];
         }
 
+        // Precompute per-quiz user attempt data and pass to view to avoid running queries in Blade
+        $quizUserData = $this->buildQuizUserData($quizzes);
+
         return view('admin.analytics.quizzes', compact(
-            'quizzes', 'quizzesCount', 'topicsCount', 'usersCountNonAdmin', 'quizStats'
+            'quizzes', 'quizzesCount', 'topicsCount', 'usersCountNonAdmin', 'quizStats', 'quizUserData'
         ));
     }
 
-    /** Show users analytics page. */
-    public function users(Request $request)
+    /**
+     * Build per-quiz user names and attempt aggregates used by the quizzes view.
+     *
+     * @param \Illuminate\Support\Collection $quizzes
+     * @return array<int, array{userNames:\Illuminate\Support\Collection, attemptCounts:\Illuminate\Support\Collection, attemptAverages:\Illuminate\Support\Collection}>
+     */
+    private function buildQuizUserData($quizzes): array
+    {
+        $quizUserData = [];
+        foreach ($quizzes as $quiz) {
+            $attemptsForQuiz = Attempt::where('quiz_id', $quiz->id)
+                ->whereNotNull('user_id')
+                ->whereNull('deleted_at')
+                ->get();
+
+            $userIds = $attemptsForQuiz->pluck('user_id')->unique()->filter()->values()->all();
+            $userNames = User::whereIn('id', $userIds)->pluck('name', 'id');
+
+            $attemptCounts = $attemptsForQuiz->groupBy('user_id')->map->count();
+            $attemptAverages = $attemptsForQuiz->groupBy('user_id')->map(function ($group) {
+                $avg = $group->avg('score');
+                return is_null($avg) ? null : round($avg, 2);
+            });
+
+            $quizUserData[$quiz->id] = [
+                'userNames' => $userNames,
+                'attemptCounts' => $attemptCounts,
+                'attemptAverages' => $attemptAverages,
+            ];
+        }
+        return $quizUserData;
+    }
+
+    /**
+     * Show users analytics page.
+     */
+    public function users(Request $request): View
     {
         $users = User::orderBy('name')->paginate(25);
         $topicsCount = Topic::whereNull('parent_id')->count();
         $quizzesCount = Quiz::count();
-        $usersCountNonAdmin = User::whereDoesntHave('roles', fn($q) => $q->where('role', 'admin'))->count();
+        $usersCountNonAdmin = $this->countNonAdminUsers();
 
         $usersCollection = method_exists($users, 'getCollection') ? $users->getCollection() : $users;
         [$authorsList, $nonAdminAuthors] = !empty($usersCollection)
@@ -142,106 +207,17 @@ class AnalyticsController extends Controller
         ));
     }
 
-    /** Return a server-rendered topics table partial for inline insertion (supports pagination via ?page=...) */
-    public function topicsFragment(Request $request)
-    {
-        $topics = Topic::with('children')->whereNull('parent_id')->orderBy('name')->paginate(25);
-        $topicIds = $topics->pluck('id')->all();
-        $quizCounts = DB::table('topicables')
-            ->whereIn('topic_id', $topicIds)
-            ->whereIn('topicable_type', self::TOPICABLE_TYPES)
-            ->select('topic_id', DB::raw('count(distinct topicable_id) as quizzes'))
-            ->groupBy('topic_id')
-            ->pluck('quizzes', 'topic_id');
-        return view('admin.partials._topics_table', compact('topics', 'quizCounts'));
-    }
-
-    /** Return a server-rendered quizzes table partial for inline insertion */
-    public function quizzesFragment(Request $request)
-    {
-        $quizzes = Quiz::withCount('questions')->orderBy('name')->paginate(25);
-        $quizIds = $quizzes->pluck('id')->all();
-        $attemptCounts = DB::table('quiz_attempts')
-            ->whereIn('quiz_id', $quizIds)
-            ->select('quiz_id', DB::raw('count(*) as attempts'))
-            ->groupBy('quiz_id')
-            ->pluck('attempts', 'quiz_id');
-        foreach ($quizzes as $quiz) {
-            $quiz->attempts_count = $attemptCounts[$quiz->id] ?? 0;
-        }
-        return view('admin.partials._quizzes_table', compact('quizzes'));
-    }
-
-    /** Return a server-rendered users table partial for inline insertion */
-    public function usersFragment(Request $request)
-    {
-        $authors = collect();
-        $users = collect();
-        try {
-            if (Schema::hasTable('roles')) {
-                $authors = User::where(function ($q) {
-                    $q->whereHas('roles', fn($r) => $r->whereRaw('LOWER(role) = ?', ['author']))
-                        ->orWhereHas('authoredQuizzes');
-                })
-                    ->whereDoesntHave('roles', fn($q) => $q->whereRaw('LOWER(role) = ?', ['admin']))
-                    ->withCount('attempts')
-                    ->orderBy('name')
-                    ->get();
-                $users = User::whereDoesntHave('roles', fn($q) => $q->whereRaw("LOWER(role) IN ('admin', 'author')"))
-                    ->whereDoesntHave('authoredQuizzes')
-                    ->withCount('attempts')
-                    ->orderBy('name')
-                    ->paginate(25);
-            } else {
-                $authorIds = DB::table('quiz_authors')->pluck('author_id')->unique()->all();
-                $authors = User::whereIn('id', $authorIds)
-                    ->withCount('attempts')
-                    ->orderBy('name')
-                    ->get();
-                $users = User::whereNotIn('id', $authorIds)
-                    ->withCount('attempts')
-                    ->orderBy('name')
-                    ->paginate(25);
-            }
-        } catch (\Exception $e) {
-            $authors = collect();
-            $users = User::withCount('attempts')->orderBy('name')->paginate(25);
-        }
-        return view('admin.partials._users_table', compact('authors', 'users'));
-    }
-
-    /** Return a single topic detail partial for inline insertion (used when clicking a subtopic) */
-    public function topicFragment(Topic $topic)
-    {
-        $topic->load('children');
-        $topicableIds = DB::table('topicables')->where('topic_id', $topic->id)->pluck('topicable_id')->all();
-        $relatedQuizzes = Quiz::whereIn('id', $topicableIds)->get();
-        $html = '<div data-fragment="topic-detail" class="p-6 text-gray-900 bg-white shadow-sm sm:rounded-lg">';
-        $html .= '<h3 class="text-2xl font-bold mb-4">' . e($topic->name) . '</h3>';
-        $html .= '<div class="mb-6"><p class="text-gray-800">' . e($topic->description ?? $topic->name) . '</p></div>';
-        $html .= '<div class="mt-8"><h4 class="text-lg font-semibold mb-4">Related Quizzes</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
-        foreach ($relatedQuizzes as $quiz) {
-            $title = e($quiz->title ?? $quiz->name);
-            $total = e($quiz->total_marks ?? 0);
-            $pass = e($quiz->pass_marks ?? 0);
-            $url = route('quizzes.show', $quiz->id);
-            $html .= "<div class=\"border border-gray-300 rounded-lg p-4 hover:shadow-md transition\">";
-            $html .= "<div class=\"flex justify-between items-start\"><div class=\"flex-1\"><h5 class=\"font-semibold mb-2\">{$title}</h5><div class=\"flex items-center gap-4 text-xs text-gray-500 mb-2\"><span> Total: {$total} marks</span><span>Pass: {$pass} marks</span></div></div></div>";
-            $html .= "<div class=\"flex gap-3 mt-3\"><a href=\"{$url}\" class=\"text-sm text-indigo-600 hover:text-indigo-900 font-medium\">View Details</a></div></div>";
-        }
-        $html .= '</div></div></div>';
-        return response($html);
-    }
 
     // Helpers
-    private function getRoles($user)
+    
+    private function getRoles($user): array
     {
         return method_exists($user, 'roles')
             ? $user->roles->pluck('role')->map(fn($r) => strtolower($r))->all()
             : [];
     }
 
-    private function splitUsersByRole($usersCollection)
+    private function splitUsersByRole($usersCollection): array
     {
         $authors = collect();
         $nonAdmins = collect();
@@ -256,7 +232,7 @@ class AnalyticsController extends Controller
         return [$authors, $nonAdmins];
     }
 
-    private function buildQuizAttempts($user)
+    private function buildQuizAttempts($user): array
     {
         $quizAttempts = [];
         $attemptsCollection = method_exists($user, 'attempts') ? $user->attempts()->with(['quiz.topics'])->get() : collect();
@@ -278,4 +254,17 @@ class AnalyticsController extends Controller
         }
         return $quizAttempts;
     }
+
+    /**
+     * Count non-admin users with a safe fallback if roles table is missing.
+     */
+    private function countNonAdminUsers(): int
+    {
+        try {
+            return User::whereDoesntHave('roles', fn($q) => $q->where('role', 'admin'))->count();
+        } catch (\Throwable $e) {
+            return User::count();
+        }
+    }
+
 }

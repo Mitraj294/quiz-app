@@ -5,41 +5,30 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Role;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of users with roles and authored quizzes.
-     */
     public function index(Request $request): View
     {
-        // Load users with roles and authored quizzes to avoid N+1 queries
         $all = User::with(['roles', 'authoredQuizzes'])->orderBy('name');
 
-        // Authors: users who have the 'author' role
-        $authors = (clone $all)->whereHas('roles', function ($q) {
-            $q->where('role', 'author');
-        })->get();
-
-        // Regular users: those who are not admins and not authors
-        $users = (clone $all)
-            ->whereDoesntHave('roles', function ($q) {
-                $q->where('role', 'admin');
-            })
-            ->whereDoesntHave('roles', function ($q) {
-                $q->where('role', 'author');
-            })
+        $authors = (clone $all)
+            ->whereHas('roles', fn($q) => $q->where('role', 'author'))
             ->get();
 
-    $roles = Role::all();
-    return view('users.index', compact('authors', 'users', 'roles'));
+        $users = (clone $all)
+            ->whereDoesntHave('roles', fn($q) => $q->where('role', 'admin'))
+            ->whereDoesntHave('roles', fn($q) => $q->where('role', 'author'))
+            ->get();
+
+        $roles = Role::all();
+
+        return view('users.index', compact('authors', 'users', 'roles'));
     }
     
-    /**
-     * Handle Add User form submission from index page
-     */
     public function addUser(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -48,15 +37,14 @@ class UserController extends Controller
             'role' => 'required|in:user,author',
         ]);
 
-        // Create user with default password '123456'
-        $user = \App\Models\User::create([
+        // Create user with a temporary password (consider sending reset link instead)
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => bcrypt('123456'),
+            'password' => Hash::make('123456'),
         ]);
 
-        // Assign role
-        $role = \App\Models\Role::where('role', $data['role'])->first();
+        $role = Role::where('role', $data['role'])->first();
         if ($role) {
             $user->roles()->attach($role->id);
         }

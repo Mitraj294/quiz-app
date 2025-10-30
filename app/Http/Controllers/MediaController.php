@@ -8,26 +8,18 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-/**
- * Media upload controller (images, audio, video).
- */
 class MediaController extends Controller
 {
-    /**
-     * Upload media file (validates, stores, returns JSON metadata).
-     */
     public function upload(Request $request): JsonResponse
     {
         $this->validateUpload($request);
 
         try {
-            /** @var UploadedFile $file */
             $file = $request->file('media');
 
             $mediaType = $this->detectMediaType($file->getMimeType());
             $filename = $this->generateFilename($file->getClientOriginalExtension());
 
-            // Store file under public/question-media
             $path = $file->storeAs('question-media', $filename, 'public');
             $url = Storage::url($path);
 
@@ -39,7 +31,6 @@ class MediaController extends Controller
                 'size' => $file->getSize(),
             ]);
         } catch (\Throwable $e) {
-            // In production we might log this; return structured JSON for the client
             return response()->json([
                 'success' => false,
                 'message' => 'Upload failed: ' . $e->getMessage(),
@@ -47,19 +38,13 @@ class MediaController extends Controller
         }
     }
 
-    /**
-     * Validate upload request.
-     */
     private function validateUpload(Request $request): void
     {
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,jpg,png,gif,webp,mp3,mp4,wav,ogg,webm,avi|max:10240', // max 10MB
+            'media' => 'required|file|mimes:jpeg,jpg,png,gif,webp,mp3,mp4,wav,ogg,webm,avi|max:10240',
         ]);
     }
 
-    /**
-     * Detect a simplified media type (image|audio|video|file) from mime-type.
-     */
     private function detectMediaType(string $mimeType): string
     {
         $type = 'file';
@@ -75,9 +60,6 @@ class MediaController extends Controller
         return $type;
     }
 
-    /**
-     * Generate a random filename for storage.
-     */
     private function generateFilename(string $extension): string
     {
         return Str::random(40) . '.' . ltrim($extension, '.');

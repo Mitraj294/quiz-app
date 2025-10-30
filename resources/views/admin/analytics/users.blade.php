@@ -18,18 +18,18 @@
         <div class="bg-white shadow-sm sm:rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-4">Overview</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <a href="{{ url('/admin/analytics/topics') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
+                <a href="{{ route('admin.analytics.topics') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                     <h4 class="text-sm text-gray-500">Topics</h4>
                     <div class="text-2xl font-bold">{{ $topicsCount ?? 0 }}</div>
                     <p class="text-sm text-gray-600 mt-2">Quiz topics in the system</p>
                 </a>
-                <a href="{{ url('/admin/analytics/quizzes') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
+                <a href="{{ route('admin.analytics.quizzes') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                     <h4 class="text-sm text-gray-500">Quizzes</h4>
                     <div class="text-2xl font-bold">{{ $quizzesCount ?? 0 }}</div>
                     <p class="text-sm text-gray-600 mt-2">Total quizzes in the platform</p>
                 </a>
 
-                <a href="{{ url('/admin/analytics/users') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
+                <a href="{{ route('admin.analytics.users') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
                     <div class="flex items-start justify-between">
                         <div>
                             <h4 class="text-sm text-indigo-700 font-semibold">Users</h4>
@@ -118,7 +118,7 @@
                                 <ul class="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg mt-4">
                                     @foreach($quizAttempts as $qa)
                                     <li class="p-3 bg-white border rounded flex items-center justify-between hover:bg-indigo-50 cursor-pointer">
-                                        <a href="{{ url('/quizzes/' . $qa['quizId'] . '/results?user_id=' . $user->id) }}" style="display:block;width:100%;height:100%;text-decoration:none;color:inherit">
+                                        <a href="{{ route('quizzes.result_index', ['quiz' => $qa['quizId'], 'user_id' => $user->id]) }}" style="display:block;width:100%;height:100%;text-decoration:none;color:inherit">
                                             <div>
                                                 <div class="text-xs text-gray-500">{{ $qa['topicName'] }}</div>
                                                 <div class="font-semibold">{{ $qa['quizTitle'] }}</div>

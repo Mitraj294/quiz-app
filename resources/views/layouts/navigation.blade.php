@@ -17,23 +17,23 @@
                     </x-nav-link>
 
                     @if(Auth::check() && Auth::user()->isAdmin())
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*') && !( ((request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()) )">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('quizzes.index')" :active="request()->is('quizzes*') && !( ((request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()) )">
                             {{ __('Manage Quiz') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('topics.index')" :active="request()->is('topics*')">
                             {{ __('Manage Topics') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/users')" :active="request()->is('users*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('users.index')" :active="request()->is('users*')">
                             {{ __('Manage Users') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900 border-b-2 border-indigo-500" :href="url('/admin/analytics')" :active="(request()->is('admin/analytics*') || request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()">
+                        <x-nav-link class="text-lg font-bold text-gray-900 border-b-2 border-indigo-500" :href="route('admin.analytics')" :active="(request()->is('admin/analytics*') || request()->is('quizzes/*/results*') || (request()->is('quizzes/*/attempts*') && request()->has('user_id'))) && Auth::check() && Auth::user()->isAdmin()">
                             {{ __('Analytics') }}
                         </x-nav-link>
                     @else
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('quizzes.index')" :active="request()->is('quizzes*')">
                             {{ __('Quizzes') }}
                         </x-nav-link>
-                        <x-nav-link class="text-lg font-bold text-gray-900" :href="url('/topics')" :active="request()->is('topics*')">
+                        <x-nav-link class="text-lg font-bold text-gray-900" :href="route('topics.index')" :active="request()->is('topics*')">
                             {{ __('Topics') }}
                         </x-nav-link>
                         <x-nav-link class="text-lg font-bold text-gray-900" :href="route('progress.index')" :active="request()->is('progress*')">
@@ -97,17 +97,17 @@
             </x-responsive-nav-link>
 
             @if(Auth::user()->isAdmin())
-                <x-responsive-nav-link :href="url('/quizzes/create')" :active="request()->is('quizzes/create')">
+                <x-responsive-nav-link :href="route('quizzes.create')" :active="request()->is('quizzes/create')">
                     {{ __('Create Quiz') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="url('/topics')" :active="request()->is('topics*')">
+                <x-responsive-nav-link :href="route('topics.index')" :active="request()->is('topics*')">
                     {{ __('Manage Topics') }}
                 </x-responsive-nav-link>
             @else
-                <x-responsive-nav-link :href="url('/quizzes')" :active="request()->is('quizzes*')">
+                <x-responsive-nav-link :href="route('quizzes.index')" :active="request()->is('quizzes*')">
                     {{ __('Quizzes') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="url('/topics')" :active="request()->is('topics*')">
+                <x-responsive-nav-link :href="route('topics.index')" :active="request()->is('topics*')">
                     {{ __('Topics') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('progress.index')" :active="request()->is('progress*')">

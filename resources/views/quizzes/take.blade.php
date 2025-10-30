@@ -15,18 +15,12 @@
                         <p class="text-gray-700 mb-4">{{ $quiz->description }}</p>
                     </div>
                     @if($quiz->duration > 0)
-                    @php
-                    // Compute remaining seconds: prefer attempt->ends_at if available (so reloads continue countdown)
-                    $remainingSeconds = $quiz->duration * 60;
-                    if (isset($attempt) && !empty($attempt->ends_at)) {
-                        $remainingSeconds = max(0, strtotime($attempt->ends_at) - time());
-                    }
-                    @endphp
+                  
 
                     <div class="flex items-center justify-between mt-4 mb-4">
                         <div>
                             <span class="text-sm text-gray-600">Time Remaining</span>
-                            <div id="quiz-timer" data-seconds="{{ $remainingSeconds }}" class="text-xl font-semibold text-red-600">
+                            <div id="quiz-timer" data-seconds="{{ $remainingSeconds ?? 0 }}" class="text-xl font-semibold text-red-600">
                                 @if($remainingSeconds >= 3600)
                                     {{ gmdate('H:i:s', $remainingSeconds) }}
                                 @else
@@ -82,23 +76,20 @@
                     </script>
                     @endif
                 </div>
-                @php
-                $computedTotalMarks = $quiz->questions->sum('marks');
-                $computedPassMarks = (int) round($computedTotalMarks / 3);
-                @endphp
+                {{-- computedTotalMarks and computedPassMarks are prepared in controller (AttemptController::start) --}}
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     <div>
                         <span class="text-sm text-gray-600">Total Marks</span>
-                        <p class="text-lg font-semibold">{{ $computedTotalMarks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedTotalMarks ?? $quiz->questions->sum('marks') }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Pass Marks</span>
-                        <p class="text-lg font-semibold">{{ $computedPassMarks }}</p>
+                        <p class="text-lg font-semibold">{{ $computedPassMarks ?? (int) round($quiz->questions->sum('marks') / 3) }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Total Questions</span>
-                        <p class="text-lg font-semibold">{{ $quiz->questions->count() }}</p>
+                        <p class="text-lg font-semibold">{{ $totalQuestions ?? $quiz->questions->count() }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-600">Duration</span>

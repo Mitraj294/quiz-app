@@ -84,7 +84,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Manage Topics</h3>
                             <p class="text-sm text-gray-600 mb-4">Organize quiz categories</p>
-                            <a href="/topics" class="text-green-600 hover:text-green-800 text-sm font-medium">Manage →</a>
+                            <a href="{{ route('topics.index') }}" class="text-green-600 hover:text-green-800 text-sm font-medium">Manage →</a>
                         </div>
                     </div>
 
@@ -143,7 +143,7 @@
                             </div>
                             <h3 class="text-lg font-semibold mb-2">Browse Topics</h3>
                             <p class="text-sm text-gray-600 mb-4">Explore quizzes by topic</p>
-                            <a href="/topics" class="text-green-600 hover:text-green-800 text-sm font-medium">View Topics →</a>
+                            <a href="{{ route('topics.index') }}" class="text-green-600 hover:text-green-800 text-sm font-medium">View Topics →</a>
                         </div>
                     </div>
 

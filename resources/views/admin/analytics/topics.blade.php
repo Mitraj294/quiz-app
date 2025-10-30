@@ -18,7 +18,7 @@
         <div class="bg-white shadow-sm sm:rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-4">Overview</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <a href="{{ url('/admin/analytics/topics') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
+                <a href="{{ route('admin.analytics.topics') }}" class="w-full text-left bg-indigo-50 border-2 border-indigo-300 shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block ring-2 ring-indigo-200">
                     <div class="flex items-start justify-between">
                         <div>
                             <h4 class="text-sm text-indigo-700 font-semibold">Topics</h4>
@@ -27,12 +27,12 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ url('/admin/analytics/quizzes') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
+                <a href="{{ route('admin.analytics.quizzes') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                     <h4 class="text-sm text-gray-500">Quizzes</h4>
                     <div class="text-2xl font-bold">{{ $quizzesCount ?? 0}}</div>
                     <p class="text-sm text-gray-600 mt-2">Total quizzes in the platform</p>
                 </a>
-                <a href="{{ url('/admin/analytics/users') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
+                <a href="{{ route('admin.analytics.users') }}" class="w-full text-left bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition p-6 cursor-pointer focus:outline-none block">
                     <h4 class="text-sm text-gray-500">Users</h4>
                     <div class="text-2xl font-bold">{{ $usersCountNonAdmin ?? 0}}</div>
                     <p class="text-sm text-gray-600 mt-2">Registered users</p>
@@ -51,7 +51,7 @@
                         <p class="text-gray-800">{{ $topic->description ?? $topic->name }}</p>
                     </div>
                     <div class="flex gap-3 mt-3">
-                        <a href="{{ url('/topics/' . $topic->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                                        <a href="{{ route('topics.show', $topic->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                     </div>
                     @php
                         $quizStats = $topicQuizStats[$topic->id] ?? [];
@@ -70,7 +70,7 @@
                                         <h5 class="font-semibold mb-2">{{ $sub->name }}</h5>
                                         <p class="text-sm text-gray-700">{{ $sub->description ?? $sub->name }}</p>
                                         <div class="flex gap-3 mt-3">
-                                            <a href="{{ url('/topics/' . $sub->id ) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
+                                            <a href="{{ route('topics.show', $sub->id) }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">View Details</a>
                                         </div>
                                     </div>
                                 </div>
