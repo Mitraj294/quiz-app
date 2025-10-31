@@ -1,0 +1,30 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Database\Seeders\RoleAndAdminSeeder;
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+      
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
+
+        $this->call(RoleAndAdminSeeder::class);
+        // Seed package question types (from package or local copy)
+        if (class_exists(\Harishdurga\LaravelQuiz\Database\Seeders\QuestionTypeSeeder::class)) {
+            $this->call(\Harishdurga\LaravelQuiz\Database\Seeders\QuestionTypeSeeder::class);
+        }
+        // Seed demo quiz content
+        $this->call(\Database\Seeders\QuizDemoSeeder::class);
+    }
+}

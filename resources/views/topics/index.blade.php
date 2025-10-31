@@ -1,0 +1,105 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Topics') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
+            <x-flash-messages />
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium">All Topics</h3>
+                        @auth
+                            @if(Auth::user()->isAdmin())
+                                <button type="button"
+                                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                    onclick="document.getElementById('create-topic-form').classList.toggle('hidden')">
+                                    Create New Topic
+                                </button>
+                            @endif
+                        @endauth
+                    </div>
+
+                    <!-- Create Topic Form -->
+                    <div id="create-topic-form" class="@if($errors->any()) @else hidden @endif mb-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
+                        <h4 class="text-lg font-medium mb-4">Create New Topic</h4>
+                        <form method="POST" action="{{ route('topics.store') }}">
+                            @csrf
+                            <div class="mb-4">
+                                <label for="name" class="block text-sm font-medium mb-2">Topic Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="name" name="name" value="{{ old('name') }}" required 
+                                                   class="w-full rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition duration-150 ease-in-out @error('name') border-red-500 @enderror">
+                                @error('name')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="description" class="block text-sm font-medium mb-2">Description (Optional)</label>
+                                <textarea id="description" name="description" rows="3" 
+                                          class="w-full rounded-md border-gray-300 bg-white px-3 py-2 shadow-sm placeholder-gray-400 min-h-[100px] resize-vertical focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition duration-150 ease-in-out @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                                @error('description')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <x-primary-button>{{ __('Create Topic') }}</x-primary-button>
+                                <x-secondary-button x-on:click="document.getElementById('create-topic-form').classList.add('hidden')">
+                                    {{ __('Cancel') }}
+                                </x-secondary-button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Topics List -->
+                    @if(isset($topics) && $topics->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($topics as $topic)
+
+                            <a href="{{ route('topics.show', $topic->id) }}" class="block p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                                <h4 class="font-semibold mb-2">{{ $topic->name }}</h4>
+
+                                @if($topic->description)
+                                    <p class="text-sm text-gray-600 mb-3">{{ $topic->description }}</p>
+                                @endif
+
+                                <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                    <span class="px-2 py-1 bg-gray-100 rounded">
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Quiz: {{ $topic->all_quizzes_count ?? 0 }}
+                                        @else
+                                            Quiz: {{ $topic->published_quizzes_count ?? 0 }}
+                                        @endif
+                                    </span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded">Subtopics: {{ $topic->children->count() }}</span>
+                                    <span class="px-2 py-1 bg-gray-100 rounded">
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Quizzes in subtopics: {{ $topic->children->sum('all_quizzes_count') }}
+                                        @else
+                                            Quizzes in subtopics: {{ $topic->children->sum('published_quizzes_count') }}
+                                        @endif
+                                    </span>
+                                    <span class="px-2 py-1 bg-green-100 rounded font-semibold">
+                                        @if(Auth::user() && Auth::user()->isAdmin())
+                                            Total quizzes: {{ $topic->total_quizzes ?? ($topic->all_quizzes_count + $topic->children->sum('all_quizzes_count')) }}
+                                        @else
+                                            Total quizzes: {{ $topic->published_total_quizzes ?? ($topic->published_quizzes_count + $topic->children->sum('published_quizzes_count')) }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                    @else
+                    <p class="text-gray-500">No topics available yet. Create one to get started!</p>
+                    @endif
+
+                
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>

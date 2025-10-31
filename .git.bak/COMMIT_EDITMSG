@@ -1,0 +1,6 @@
+Refactor route helpers in views for consistency and clarity
+
+- Updated URL generation in various Blade templates to use route() instead of url() for better maintainability and readability.
+- Adjusted links in analytics, dashboard, navigation, progress, quizzes, topics, and welcome views to utilize named routes.
+- Cleaned up unnecessary PHP code in progress and quiz views to streamline logic and improve performance.
+- Enhanced user experience by ensuring that all links are generated consistently across the application.
